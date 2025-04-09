@@ -50,7 +50,6 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
         }
         else if (two == "insert")
         {
-            cout<<'x'<<endl;
             three=three.substr(1,three.size()-2);
             vector<string> inputs2;
             string temp = "";

@@ -249,7 +249,7 @@ table::table(string tableName, string databaseName, vector<pair<string, string>>
     string folderName = "databases/" + databaseName + "/" + tableName;
     if (std::filesystem::create_directory(folderName))
     {
-        cout << "Folder created successfully: " << folderName << endl;
+        // cout << "Folder created successfully: " << folderName << endl;
     }
     else
     {
@@ -426,9 +426,13 @@ bool table::deleteX(string databaseName, int i,string mp)
             }
             try
             {
-                vector<vector<string>> answer;
+                vector<map<string,string>> answer;
                 
                 map<string, pair<string, int>> cols;
+                for(auto i:cols){
+                    cout<<i.first<<' ';
+                }
+                cout<<endl;
                 for (int i = 0; i < data.size(); i++)
                 {
                     string temp = "char";
@@ -552,6 +556,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
+                                }
+                            }
                             else if (between[i] == "<=")
                             {
                                 if (one <= two)
@@ -590,6 +599,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                 if (one == two)
                                 {
                                     checks[i] = true;
+                                }
+                            }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -632,6 +646,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
+                                }
+                            }
                             else if (between[i] == "<=")
                             {
                                 if (one <= two)
@@ -670,6 +689,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                 if (one == two)
                                 {
                                     checks[i] = true;
+                                }
+                            }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -712,6 +736,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
+                                }
+                            }
                             else if (between[i] == "<=")
                             {
                                 if (one <= two)
@@ -750,12 +779,7 @@ bool table::deleteX(string databaseName, int i,string mp)
                         }
                         else{
 
-                            vector<string> temp;
-                            for (auto i : b)
-                            {
-                                temp.push_back(i.second);
-                            }
-                            answer.push_back(temp);
+                            answer.push_back(b);
                         }
                     }
                     else
@@ -764,12 +788,7 @@ bool table::deleteX(string databaseName, int i,string mp)
                         bool check = evaluateExpr(expression, checks);
                         if (!check)
                         {
-                            vector<string> temp;
-                            for (auto i : b)
-                            {
-                                temp.push_back(i.second);
-                            }
-                            answer.push_back(temp);
+                            answer.push_back(b);
                         }
                     }
                 }
@@ -785,7 +804,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                     }
                     for (auto i : answer)
                     {
-                        interpretWrite(tableDataFile, i);
+                        vector<string>toWrite;
+                        for(auto k:data){
+                            toWrite.push_back(i[k.first]);
+                        }
+                        interpretWrite(tableDataFile, toWrite);
                     }
                     tableDataFile.close();
                 }
@@ -949,7 +972,6 @@ bool table::parallelDelete(string databaseName, string inputs){
     }
 }
 
-
 bool table::search(string databaseName, int i, string mp)
 {
     try
@@ -1063,7 +1085,15 @@ bool table::search(string databaseName, int i, string mp)
                         // check=true;
                     }
                 }
-
+                // cout<<expression<<endl;
+                // for(auto i:cond){
+                //     cout<<i.first<<' '<<i.second<<endl;
+                // }
+                // cout<<endl;
+                for(auto i:cols){
+                    cout<<i.first<<' ';
+                }
+                cout<<endl;
                 int sizeOfLine = getTotalBytes(this->data);
                 int rowNumber=0;
                 while (!tableDataFile.eof())
@@ -1086,6 +1116,11 @@ bool table::search(string databaseName, int i, string mp)
                                 if (one == two)
                                 {
                                     checks[i] = true;
+                                }
+                            }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1126,6 +1161,11 @@ bool table::search(string databaseName, int i, string mp)
                                 if (one == two)
                                 {
                                     checks[i] = true;
+                                }
+                            }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1169,6 +1209,11 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
+                                }
+                            }
                             else if (between[i] == "<=")
                             {
                                 if (one <= two)
@@ -1209,6 +1254,11 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
+                                }
+                            }
                             else if (between[i] == "<=")
                             {
                                 if (one <= two)
@@ -1247,6 +1297,11 @@ bool table::search(string databaseName, int i, string mp)
                                 if (one == two)
                                 {
                                     checks[i] = true;
+                                }
+                            }
+                            else if(between[i]=="!="){
+                                if(one!=two){
+                                    checks[i]=true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1294,7 +1349,7 @@ bool table::search(string databaseName, int i, string mp)
                     }
                     else
                     {
-
+                        
                         bool check = evaluateExpr(expression, checks);
                         if (check)
                         {
@@ -1337,7 +1392,6 @@ bool table::search(string databaseName, int i, string mp)
         return false;
     }
 }
-
 
 bool table::search(string databaseName)
 {

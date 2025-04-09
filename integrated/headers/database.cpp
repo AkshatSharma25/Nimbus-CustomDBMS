@@ -74,7 +74,7 @@ database::database(string name)
 
     if (std::filesystem::create_directory(folderName))
     {
-        cout << "Folder created successfully: " << folderName << endl;
+        // cout << "Folder created successfully: " << folderName << endl;
     }
     else
     {
