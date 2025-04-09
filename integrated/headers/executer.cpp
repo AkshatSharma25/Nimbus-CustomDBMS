@@ -114,31 +114,6 @@ void executer::executeDouble(const string &one, const string &two, const vector<
                 }
                 dbs[selectedDatabase].dropTable(nameVal);
             }
-            else if (two == "find")
-            {
-                if (dbs.find(selectedDatabase) == dbs.end())
-                {
-                    string problem = "Error searching data: Database does not exist";
-                    throw problem;
-                }
-                bool flag = false;
-                string nameVal = "";
-                for (auto i : inputs)
-                {
-                    if (i.first == "name")
-                    {
-                        nameVal = i.second;
-                        flag = true;
-                        break;
-                    }
-                }
-                if (!flag)
-                {
-                    string problem = "Error dropping table: 'name' is required";
-                    throw problem;
-                }
-                dbs[selectedDatabase].searchInTable(inputs);
-            }
             else if (two == "createIndex")
             {
                 if (dbs.find(selectedDatabase) == dbs.end())
@@ -150,7 +125,7 @@ void executer::executeDouble(const string &one, const string &two, const vector<
             }
             else
             {
-                string problem = "Error: Invalid middle keyword";
+                string problem = "Error:qqq Invalid middle keyword";
                 throw problem;
             }
         }
@@ -277,7 +252,6 @@ void executer::updateMainMetaDataDELETE(const string &databaseNameX)
     metaDataFile.close();
 }
 
-
 void executer::executeInsert(const string &one, const string &two, const vector<string> &inputs2, map<string, database> &dbs, string &selectedDatabase)
 {
     try
@@ -293,39 +267,30 @@ void executer::executeInsert(const string &one, const string &two, const vector<
                 }
                 dbs[selectedDatabase].insertIntoTable(inputs2);
             }
-            else if (two == "delete")
-            {
-                if (dbs.find(selectedDatabase) == dbs.end())
-                {
-                    string problem = "Error creating table: Database does not exist";
-                    throw problem;
-                }
-                dbs[selectedDatabase].deleteFromTable(inputs2);
-            }
             else if (two == "update")
             {
                 if (dbs.find(selectedDatabase) == dbs.end())
                 {
                     throw string("Error updating data: Database does not exist");
                 }
-                
+
                 if (inputs2.size() < 3)
                 {
                     throw string("Error updating data: Insufficient parameters. Required: table_name, column_name, new_value, condition.");
                 }
-                
+
                 string tableName = inputs2[0];
                 string columnName = inputs2[1];
                 string newValue = inputs2[2];
-                string condition = (inputs2.size() > 3) ? inputs2[3] : ""; 
-                
+                string condition = (inputs2.size() > 3) ? inputs2[3] : "";
+
                 dbs[selectedDatabase].updateTable(tableName, columnName, newValue, condition);
-                
+
                 cout << GREEN << "Records updated successfully in " << tableName << RESET << endl;
             }
             else
             {
-                string problem = "Error: Invalid middle keyword";
+                string problem = "Error:ppp Invalid middle keyword";
                 throw problem;
             }
         }
@@ -341,6 +306,32 @@ void executer::executeInsert(const string &one, const string &two, const vector<
     }
 }
 
-void executer::executeUpdate(const string &one, const string &two,map<string, database> &dbs, string &selectedDatabase, const string &tableName,vector<pair<string, string>> & whereClause, vector<pair<string, string>> &setClause){
-
+void executer::executeUpdate(const string &one, const string &two, map<string, database> &dbs, string &selectedDatabase, const string &tableName, vector<pair<string, string>> &whereClause, vector<pair<string, string>> &setClause)
+{
 }
+
+void executer::executeFindDelete(string &one, string &two, string &findInputs, map<string, database> &dbs, string &selectedDatabase)
+{
+    if (two == "find")
+    {
+        if (dbs.find(selectedDatabase) == dbs.end())
+        {
+            string problem = "Error searching data: Database does not exist";
+            throw problem;
+        }
+        // cout<<selectedDatabase<<' '<<findInputs<<endl;
+        dbs[selectedDatabase].searchInTable(findInputs);
+    }
+    else
+    {
+        if (dbs.find(selectedDatabase) == dbs.end())
+        {
+            string problem = "Error searching data: Database does not exist";
+            throw problem;
+        }
+
+        dbs[selectedDatabase].deleteFromTable(findInputs);
+    }
+}
+
+

@@ -229,10 +229,56 @@ void database::insertIntoTable(vector<string> inputs)
     tables[nameString].first.insert(databaseName, inputs);
 }
 
-void database::deleteFromTable(vector<string> inputs)
+void database::deleteFromTable(string inputs)
 {
-    // tables[tableName].first.deleteX(inputs);
-    // cout<<GREEN<<"Data deleted successfully!"<<RESET<<endl;
+    if (inputs.size() == 0)
+    {
+        cout << RED << "Error: No values to insert" << RESET << endl;
+        return;
+    }
+    string temp="";
+    string name="";
+    string valueString="";
+    int sizeOfInputs=inputs.size();
+    for(int i=0;i<sizeOfInputs;i++){
+        if(inputs[i]==','){
+            temp=inputs.substr(0,i);
+            inputs=inputs.substr(i+1,sizeOfInputs-i-2);
+            break;
+        }
+    }
+
+    for(int i=0;i<temp.size();i++){
+        if(temp[i]==':'){
+            valueString=temp.substr(i+1,temp.size()-i-1);
+            name=temp.substr(0,i-1);
+
+            break;
+        }
+    }
+
+    
+    // cout<<name<<' '<<valueString<<' '<<inputs<<endl;
+    // string nameString = inputs[0].first;
+    if (name != "(nam")
+    {
+        cout << RED << "Error: Invalid column name" << RESET << endl;
+        return;
+    }
+    // string valueString = inputs[0].second;
+    if (valueString == "")
+    {
+        cout << RED << "Error: Invalid name value" << RESET << endl;
+        return;
+    }
+
+    if (tables.find(valueString) == tables.end())
+    {
+        cout << RED << "Error: Table does not exist" << RESET << endl;
+        return;
+    }
+    tables[valueString].first.parallelDelete(databaseName, inputs);
+    cout << GREEN << "Data searched successfully!" << RESET << endl;
 }
 
 void database::updateTable(const string tableName, const string columnName, const string newValue, const string condition)
@@ -295,20 +341,43 @@ void database::createIndex(vector<pair<string, string>> inputs)
     return;
 }
 
-void database::searchInTable(vector<pair<string, string>> inputs)
+void database::searchInTable(string inputs)
 {
     if (inputs.size() == 0)
     {
         cout << RED << "Error: No values to insert" << RESET << endl;
         return;
     }
-    string nameString = inputs[0].first;
-    if (nameString != "name")
+    string temp="";
+    string name="";
+    string valueString="";
+    int sizeOfInputs=inputs.size();
+    for(int i=0;i<sizeOfInputs;i++){
+        if(inputs[i]==','){
+            temp=inputs.substr(0,i);
+            inputs=inputs.substr(i+1,sizeOfInputs-i-2);
+            break;
+        }
+    }
+
+    for(int i=0;i<temp.size();i++){
+        if(temp[i]==':'){
+            valueString=temp.substr(i+1,temp.size()-i-1);
+            name=temp.substr(0,i-1);
+
+            break;
+        }
+    }
+
+    
+    // cout<<name<<' '<<valueString<<' '<<inputs<<endl;
+    // string nameString = inputs[0].first;
+    if (name != "(nam")
     {
         cout << RED << "Error: Invalid column name" << RESET << endl;
         return;
     }
-    string valueString = inputs[0].second;
+    // string valueString = inputs[0].second;
     if (valueString == "")
     {
         cout << RED << "Error: Invalid name value" << RESET << endl;
@@ -320,22 +389,21 @@ void database::searchInTable(vector<pair<string, string>> inputs)
         cout << RED << "Error: Table does not exist" << RESET << endl;
         return;
     }
-    inputs.erase(inputs.begin());
 
-    if (inputs.size() == 0)
-    {
-        tables[valueString].first.search(databaseName);
-        cout << GREEN << "Data searched successfully!" << RESET << endl;
-        return;
-    }
-    if(inputs.size()==1){
-        if(inputs[0].first==tables[valueString].first.indexedColumn){
-            cout<<inputs[0].first<<' '<<inputs[0].second<<endl;
-            tables[valueString].first.indexedSearch(databaseName, inputs[0].first,inputs[0].second);
-            cout << GREEN << "Data searched successfully!" << RESET << endl;
-            return;
-        }
-    }
+    // if (inputs.size() == 0)
+    // {
+    //     tables[valueString].first.search(databaseName);
+    //     cout << GREEN << "Data searched successfully!" << RESET << endl;
+    //     return;
+    // }
+    // if(inputs.size()==1){
+    //     if(inputs[0].first==tables[valueString].first.indexedColumn){
+    //         cout<<inputs[0].first<<' '<<inputs[0].second<<endl;
+    //         tables[valueString].first.indexedSearch(databaseName, inputs[0].first,inputs[0].second);
+    //         cout << GREEN << "Data searched successfully!" << RESET << endl;
+    //         return;
+    //     }
+    // }
     tables[valueString].first.parallelSearch(databaseName, inputs);
     cout << GREEN << "Data searched successfully!" << RESET << endl;
 }

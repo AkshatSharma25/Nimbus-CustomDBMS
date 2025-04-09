@@ -9,8 +9,7 @@
 
 using namespace std;
 
-
-map<string,string> table::interpretRead(ifstream &file, vector<string>&inputs,int sizeOfLine)
+map<string, string> table::interpretRead(ifstream &file, int sizeOfLine)
 {
 
     // eq: equal to
@@ -20,47 +19,51 @@ map<string,string> table::interpretRead(ifstream &file, vector<string>&inputs,in
     // ge: greater than or equal to
     // le: less than or equal to
 
-
     vector<string> answer;
+    map<string, string> dataVals;
 
-    map<string,string>dataVals;
     vector<char> buffer(sizeOfLine);
     file.read(buffer.data(), sizeOfLine);
-    int offset=0;
-    for(auto i:data){
-        if(i.second.first=="char" && i.second.second==1){
+    int offset = 0;
+    for (auto i : data)
+    {
+        if (i.second.first == "char" && i.second.second == 1)
+        {
             char temp;
             std::memcpy(&temp, buffer.data() + offset, sizeof(char));
             offset += sizeof(char);
             dataVals[i.first] = std::to_string(temp);
         }
-        else if(i.second.first=="char"){
+        else if (i.second.first == "char")
+        {
             char temp[i.second.second];
-            std::memcpy(&temp, buffer.data() + offset, sizeof(char)*i.second.second);
-            offset += sizeof(char)*i.second.second;
+            std::memcpy(&temp, buffer.data() + offset, sizeof(char) * i.second.second);
+            offset += sizeof(char) * i.second.second;
             dataVals[i.first] = string(temp);
         }
-        else if(i.second.first=="bool"){
+        else if (i.second.first == "bool")
+        {
             bool temp;
             std::memcpy(&temp, buffer.data() + offset, sizeof(bool));
             offset += sizeof(bool);
             dataVals[i.first] = std::to_string(temp);
         }
-        else if(i.second.first=="int"){
+        else if (i.second.first == "int")
+        {
             int temp;
             std::memcpy(&temp, buffer.data() + offset, sizeof(int));
             offset += sizeof(int);
             dataVals[i.first] = std::to_string(temp);
         }
-        else if(i.second.first=="double"){
+        else if (i.second.first == "double")
+        {
             double temp;
             std::memcpy(&temp, buffer.data() + offset, sizeof(double));
             offset += sizeof(double);
             dataVals[i.first] = std::to_string(temp);
         }
-    }    
+    }
     return dataVals;
-
 }
 
 vector<string> table::interpretRead(ifstream &file)
@@ -409,125 +412,412 @@ bool table::insert(string databaseName, vector<string> inputs)
     return true;
 }
 
-bool table::deleteX(string databaseName, vector<string> inputs)
+bool table::deleteX(string databaseName, int i,string mp)
 {
-    cout << "Data deleted successfully!" << endl;
-    return true;
+    try
+    {
+        try
+        {
+            ifstream tableDataFile("databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin", ios::in | ios::binary);
+
+            if (!tableDataFile)
+            {
+                throw runtime_error("Failed to open table data file: " + tableName + to_string(i) + ".bin");
+            }
+            try
+            {
+                vector<vector<string>> answer;
+                
+                map<string, pair<string, int>> cols;
+                for (int i = 0; i < data.size(); i++)
+                {
+                    string temp = "char";
+                    if (data[i].second.first == "char" && data[i].second.second > 1)
+                    {
+                        temp = "string";
+                        cols.insert({data[i].first, {temp, i}});
+                    }
+                    else{
+                        temp=data[i].second.first;
+                        cols.insert({data[i].first, {temp, i}});
+                    }
+                }
+                int ctr = 0;
+                vector<pair<string, string>> cond;
+                vector<string> between;
+                string temp = "";
+                string value = "";
+                string condition = "";
+                bool check = true;
+                string expression = "";
+                for (int i = 0; i < mp.size(); i++)
+                {
+                    if (mp[i] == '&' || mp[i] == '|')
+                    {
+                        cond.push_back({temp, value});
+                        between.push_back(condition);
+                        expression += mp[i];
+                        temp = "";
+                        value = "";
+                        condition = "";
+                        check = true;
+                    }
+                    else if (mp[i] == '=' && mp[i + 1] == '=')
+                    {
+                        condition = "==";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>' && mp[i + 1] == '=')
+                    {
+                        condition = ">=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '<' && mp[i + 1] == '=')
+                    {
+                        condition = "<=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>' && mp[i + 1] == '=')
+                    {
+                        condition = ">=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '<')
+                    {
+                        condition = "<";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>')
+                    {
+                        condition = ">";
+                        i++;
+                        check = false;
+                    }
+                    else if (check && mp[i] != '{' && mp[i] != '}')
+                    {
+                        temp += mp[i];
+                    }
+                    else if (mp[i] != '{' && mp[i] != '}')
+                    {
+                        value += mp[i];
+                    }
+                    else
+                    {
+                        if (mp[i] == '}')
+                        {
+                            if (temp != "" && condition != "" && value != "")
+                            {
+                                cond.push_back({temp, value});
+                                between.push_back(condition);
+                            }
+                            temp = "";
+                            value = "";
+                            condition = "";
+                            check = true;
+                            // expression+=to_string(ctr);
+                            // ctr++;
+                        }
+                        expression += mp[i];
+                        // check=true;
+                    }
+                }
+
+                int sizeOfLine = getTotalBytes(this->data);
+                int rowNumber=0;
+                // set<int>rowsToDelete;
+                while (!tableDataFile.eof())
+                {
+                    rowNumber++;
+
+                    map<string, string> b = interpretRead(tableDataFile, sizeOfLine);
+                    vector<bool> checks(cond.size());
+                    
+                    for (int i = 0; i < cond.size(); i++)
+                    {
+                        // cout<<cols[cond[i].first].first<<' '<<b[cond[i].first]<<' '<<cond[i].first<<' '<<cond[i].second<<endl;
+                        if (cols[cond[i].first].first == "int")
+                        {
+                            int one = stoi(b[cond[i].first]);
+                            int two = stoi(cond[i].second);
+                            // cout<<'$'<<one<<' '<<two<<endl;
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "double")
+                        {
+                            double one = stod(b[cond[i].first]);
+                            double two = stod(cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "char")
+                        {
+                            char one = stoi(b[cond[i].first]);
+                            char two = cond[i].second[0];
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "string")
+                        {
+                            string one = (b[cond[i].first]);
+                            string two = (cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "bool")
+                        {
+                            int one = stoi(b[cond[i].first]);
+                            int two = stoi(cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                    }
+                    if (checks.size() == 1)
+                    {
+                        if (checks[0] == true)
+                        {
+                            continue;
+                        }
+                        else{
+
+                            vector<string> temp;
+                            for (auto i : b)
+                            {
+                                temp.push_back(i.second);
+                            }
+                            answer.push_back(temp);
+                        }
+                    }
+                    else
+                    {
+
+                        bool check = evaluateExpr(expression, checks);
+                        if (!check)
+                        {
+                            vector<string> temp;
+                            for (auto i : b)
+                            {
+                                temp.push_back(i.second);
+                            }
+                            answer.push_back(temp);
+                        }
+                    }
+                }
+
+
+                try{
+                    string tableDataFilePath = "databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin";
+                    ofstream tableDataFile(tableDataFilePath, ios::out | ios::binary);
+                    if (!tableDataFile)
+                    {
+                        cout << RED << "Error: Failed to open table data file" << RESET << endl;
+                        return false;
+                    }
+                    for (auto i : answer)
+                    {
+                        interpretWrite(tableDataFile, i);
+                    }
+                    tableDataFile.close();
+                }
+                catch(const exception &e){
+                    cerr << RED << "Error processing data at line " << __LINE__ << ": " << e.what() << RESET << endl;
+                }
+            }
+            catch (const exception &e)
+            {
+                cerr << RED << "Error processing data at line " << __LINE__ << ": " << e.what() << RESET << endl;
+            }
+
+            tableDataFile.close();
+        }
+        catch (const exception &e)
+        {
+            cerr << RED << "Error processing file at line " << __LINE__ << ": " << e.what() << RESET << endl;
+            return false;
+        }
+
+        return true;
+    }
+    catch (const exception &e)
+    {
+        cerr << RED << "Fatal error in search function at line " << __LINE__ << ": " << e.what() << RESET << endl;
+        return false;
+    }
 }
 
 void table::update(string databaseName, const string &columnName, const string &newValue, const string &condition)
 {
-    try
-    {
-        int numberOfFiles = numberOfRecords / 1000 + 1;
-        bool updated = false;
 
-        for (int i = 1; i <= numberOfFiles; i++)
-        {
-            string filePath = "databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin";
-            ifstream tableDataFile(filePath, ios::in | ios::binary);
-            if (!tableDataFile)
-            {
-                cerr << "Error: Failed to open file " << filePath << endl;
-                continue;
-            }
-
-            vector<vector<string>> records;
-            while (!tableDataFile.eof())
-            {
-                vector<string> record;
-                string field;
-                while (getline(tableDataFile, field, '\0'))
-                {
-                    record.push_back(field);
-                }
-                if (!record.empty())
-                    records.push_back(record);
-            }
-            tableDataFile.close();
-
-            // Find column index
-            int colIndex = -1;
-            if (!records.empty())
-            {
-                for (size_t j = 0; j < records[0].size(); j++)
-                {
-                    if (records[0][j] == columnName)
-                    {
-                        colIndex = j;
-                        break;
-                    }
-                }
-            }
-            if (colIndex == -1)
-            {
-                cerr << "Error: Column '" << columnName << "' not found in table '" << tableName << "'\n";
-                return;
-            }
-
-            // Parse condition
-            auto evaluateCondition = [&](const vector<string> &record) -> bool {
-                if (condition.empty()) return true; // Update all if no condition
-
-                istringstream iss(condition);
-                string condCol, op, value;
-                iss >> condCol >> op >> value;
-
-                int condIndex = -1;
-                for (size_t j = 0; j < records[0].size(); j++)
-                {
-                    if (records[0][j] == condCol)
-                    {
-                        condIndex = j;
-                        break;
-                    }
-                }
-                if (condIndex == -1) return false;
-
-                if (op == "=") return record[condIndex] == value;
-                if (op == "!=") return record[condIndex] != value;
-                if (op == "<") return stoi(record[condIndex]) < stoi(value);
-                if (op == ">") return stoi(record[condIndex]) > stoi(value);
-                return false;
-            };
-
-            // Update matching records
-            for (auto &record : records)
-            {
-                if (evaluateCondition(record))
-                {
-                    record[colIndex] = newValue;
-                    updated = true;
-                }
-            }
-
-            // Write back to file
-            ofstream outFile(filePath, ios::out | ios::binary | ios::trunc);
-            if (!outFile)
-            {
-                cerr << "Error: Failed to open file for writing: " << filePath << endl;
-                continue;
-            }
-            for (const auto &record : records)
-            {
-                for (const auto &field : record)
-                {
-                    outFile.write(field.c_str(), field.size());
-                    outFile.put('\0'); // Null-terminated
-                }
-            }
-            outFile.close();
-        }
-
-        if (updated)
-            cout << "Records updated successfully in table '" << tableName << "'\n";
-        else
-            cout << "No records matched the condition.\n";
-    }
-    catch (const exception &e)
-    {
-        cerr << "Fatal error in updateRecords: " << e.what() << endl;
-    }
 }
 
 bool table::updateRowNumber(string databaseName)
@@ -576,20 +866,18 @@ bool table::updateRowNumber(string databaseName)
     return true;
 }
 
-bool table::parallelSearch(string databaseName,vector<string> inputs)
+bool table::parallelSearch(string databaseName, string inputs)
 {
     try
     {
         int numberOfFiles = numberOfRecords / 1000 + 1;
-        
+
         std::vector<std::future<bool>> futures;
 
         // Limit threads dynamically
-        int maxThreads = std::thread::hardware_concurrency() / 2;
+        int maxThreads = 2;
         if (maxThreads < 2)
             maxThreads = 2;
-
-        
 
         for (int i = 1; i <= numberOfFiles; i++)
         {
@@ -603,7 +891,7 @@ bool table::parallelSearch(string databaseName,vector<string> inputs)
 
             // Launch thread asynchronously
             futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
-                                         { return this->search(databaseName,  i, inputs); }));
+                                         { return this->search(databaseName, i, inputs); }));
             // search(databaseName, inputs, i, mp);
         }
 
@@ -620,11 +908,52 @@ bool table::parallelSearch(string databaseName,vector<string> inputs)
     }
 }
 
-bool table::search(string databaseName,  int i, vector<string> mp)
+bool table::parallelDelete(string databaseName, string inputs){
+    try
+    {
+        int numberOfFiles = numberOfRecords / 1000 + 1;
+
+        std::vector<std::future<bool>> futures;
+
+        // Limit threads dynamically
+        int maxThreads = 2;
+        if (maxThreads < 2)
+            maxThreads = 2;
+
+        for (int i = 1; i <= numberOfFiles; i++)
+        {
+            if (futures.size() >= maxThreads)
+            {
+                // Wait for some threads to finish before launching more
+                for (auto &f : futures)
+                    f.get();
+                futures.clear();
+            }
+
+            // Launch thread asynchronously
+            futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
+                                         { return this->deleteX(databaseName, i, inputs); }));
+            // search(databaseName, inputs, i, mp);
+        }
+
+        // Wait for remaining threads
+        for (auto &f : futures)
+            f.get();
+
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error in parallelSearch: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+
+bool table::search(string databaseName, int i, string mp)
 {
     try
     {
-
         try
         {
             ifstream tableDataFile("databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin", ios::in | ios::binary);
@@ -636,13 +965,348 @@ bool table::search(string databaseName,  int i, vector<string> mp)
             try
             {
                 vector<vector<string>> answer;
-                int sizeOfLine=getTotalBytes(this->data);
+                map<string, pair<string, int>> cols;
+                for (int i = 0; i < data.size(); i++)
+                {
+                    string temp = "char";
+                    if (data[i].second.first == "char" && data[i].second.second > 1)
+                    {
+                        temp = "string";
+                        cols.insert({data[i].first, {temp, i}});
+                    }
+                    else{
+                        temp=data[i].second.first;
+                        cols.insert({data[i].first, {temp, i}});
+                    }
+                }
+                int ctr = 0;
+                vector<pair<string, string>> cond;
+                vector<string> between;
+                string temp = "";
+                string value = "";
+                string condition = "";
+                bool check = true;
+                string expression = "";
+                for (int i = 0; i < mp.size(); i++)
+                {
+                    if (mp[i] == '&' || mp[i] == '|')
+                    {
+                        cond.push_back({temp, value});
+                        between.push_back(condition);
+                        expression += mp[i];
+                        temp = "";
+                        value = "";
+                        condition = "";
+                        check = true;
+                    }
+                    else if (mp[i] == '=' && mp[i + 1] == '=')
+                    {
+                        condition = "==";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>' && mp[i + 1] == '=')
+                    {
+                        condition = ">=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '<' && mp[i + 1] == '=')
+                    {
+                        condition = "<=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>' && mp[i + 1] == '=')
+                    {
+                        condition = ">=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '<')
+                    {
+                        condition = "<";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>')
+                    {
+                        condition = ">";
+                        i++;
+                        check = false;
+                    }
+                    else if (check && mp[i] != '{' && mp[i] != '}')
+                    {
+                        temp += mp[i];
+                    }
+                    else if (mp[i] != '{' && mp[i] != '}')
+                    {
+                        value += mp[i];
+                    }
+                    else
+                    {
+                        if (mp[i] == '}')
+                        {
+                            if (temp != "" && condition != "" && value != "")
+                            {
+                                cond.push_back({temp, value});
+                                between.push_back(condition);
+                            }
+                            temp = "";
+                            value = "";
+                            condition = "";
+                            check = true;
+                            // expression+=to_string(ctr);
+                            // ctr++;
+                        }
+                        expression += mp[i];
+                        // check=true;
+                    }
+                }
+
+                int sizeOfLine = getTotalBytes(this->data);
+                int rowNumber=0;
                 while (!tableDataFile.eof())
                 {
-                    map<string,string> b = interpretRead(tableDataFile, mp,sizeOfLine);
+                    rowNumber++;
+
+                    map<string, string> b = interpretRead(tableDataFile, sizeOfLine);
+                    vector<bool> checks(cond.size());
                     
+                    for (int i = 0; i < cond.size(); i++)
+                    {
+                        // cout<<cols[cond[i].first].first<<' '<<b[cond[i].first]<<' '<<cond[i].first<<' '<<cond[i].second<<endl;
+                        if (cols[cond[i].first].first == "int")
+                        {
+                            int one = stoi(b[cond[i].first]);
+                            int two = stoi(cond[i].second);
+                            // cout<<'$'<<one<<' '<<two<<endl;
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "double")
+                        {
+                            double one = stod(b[cond[i].first]);
+                            double two = stod(cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "char")
+                        {
+                            char one = stoi(b[cond[i].first]);
+                            char two = cond[i].second[0];
+                            // cout<<'#'<<b[cond[i].first]<<' '<<cond[i].second<<endl;
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "string")
+                        {
+                            string one = (b[cond[i].first]);
+                            string two = (cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "bool")
+                        {
+                            int one = stoi(b[cond[i].first]);
+                            int two = stoi(cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                    }
+                    if (checks.size() == 1)
+                    {
+                        if (checks[0] == true)
+                        {
+                            vector<string> temp;
+                            for (auto i : b)
+                            {
+                                temp.push_back(i.second);
+                            }
+                            answer.push_back(temp);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+
+                        bool check = evaluateExpr(expression, checks);
+                        if (check)
+                        {
+                            vector<string> temp;
+                            for (auto i : b)
+                            {
+                                temp.push_back(i.second);
+                            }
+                            answer.push_back(temp);
+                        }
+                    }
                 }
-                
                 for (auto i : answer)
                 {
                     for (auto j : i)
@@ -673,7 +1337,6 @@ bool table::search(string databaseName,  int i, vector<string> mp)
         return false;
     }
 }
-
 
 
 bool table::search(string databaseName)
@@ -860,7 +1523,7 @@ bool table::createIndex(string databaseName, string columnName, bool init)
     }
     if (indexType == "string")
     {
-        indexString = map<string, pair<int,int>>();
+        indexString = map<string, pair<int, int>>();
         for (size_t k = 0; k < answer.size() - 1; k++)
         {
             // for (size_t j = 0; j < answer[k].size(); j++)
@@ -868,12 +1531,12 @@ bool table::createIndex(string databaseName, string columnName, bool init)
             //     string s = to_string(i) + " " + to_string(j);
             //     indexString[answer[i][p]] = s;
             // }
-            indexString[answer[k][p]] = {k / 1000 + 1 ,k % 1000 + 1};
+            indexString[answer[k][p]] = {k / 1000 + 1, k % 1000 + 1};
         }
     }
     else if (indexType == "int")
     {
-        indexInt = map<int, pair<int,int>>();
+        indexInt = map<int, pair<int, int>>();
         for (size_t i = 0; i < answer.size() - 1; i++)
         {
             // for (size_t j = 0; j < answer[i].size(); j++)
@@ -881,12 +1544,12 @@ bool table::createIndex(string databaseName, string columnName, bool init)
             //     string s = to_string(i) + " " + to_string(j);
             //     indexInt[stoi(answer[i][p])] = s;
             // }
-            indexInt[stoi(answer[i][p])] = {i / 1000 + 1,i % 1000 + 1};
+            indexInt[stoi(answer[i][p])] = {i / 1000 + 1, i % 1000 + 1};
         }
     }
     else if (indexType == "double")
     {
-        indexDouble = map<double, pair<int,int>>();
+        indexDouble = map<double, pair<int, int>>();
         for (size_t i = 0; i < answer.size() - 1; i++)
         {
             // for (size_t j = 0; j < answer[i].size(); j++)
@@ -894,12 +1557,12 @@ bool table::createIndex(string databaseName, string columnName, bool init)
             //     string s = to_string(i) + " " + to_string(j);
             //     indexDouble[stod(answer[i][p])] = s;
             // }
-            indexDouble[stod(answer[i][p])] = {i / 1000 + 1,i % 1000 + 1};
+            indexDouble[stod(answer[i][p])] = {i / 1000 + 1, i % 1000 + 1};
         }
     }
     else if (indexType == "char")
     {
-        indexChar = map<char, pair<int,int>>();
+        indexChar = map<char, pair<int, int>>();
         for (size_t i = 0; i < answer.size() - 1; i++)
         {
             // for (size_t j = 0; j < answer[i].size(); j++)
@@ -907,7 +1570,7 @@ bool table::createIndex(string databaseName, string columnName, bool init)
             //     string s = to_string(i) + " " + to_string(j);
             //     indexChar[answer[i][p][0]] = s;
             // }
-            indexChar[answer[i][p][0]] = {i / 1000 + 1,i % 1000 + 1};
+            indexChar[answer[i][p][0]] = {i / 1000 + 1, i % 1000 + 1};
         }
     }
     //////////////////////////////////////
@@ -922,13 +1585,15 @@ bool table::createIndex(string databaseName, string columnName, bool init)
     return true;
 }
 
-bool table::indexedSearch(string databaseName, string columnName, string value) {
+bool table::indexedSearch(string databaseName, string columnName, string value){
     string type = "";
     string op = value.substr(0, 2);
 
     // Determine column type
-    for (const auto& col : data) {
-        if (col.first == columnName) {
+    for (const auto &col : data)
+    {
+        if (col.first == columnName)
+        {
             type = (col.second.second > 1) ? "string" : col.second.first;
             break;
         }
@@ -939,7 +1604,8 @@ bool table::indexedSearch(string databaseName, string columnName, string value) 
 
     // Convert operators to standard SQL-like symbols
     unordered_map<string, string> opMap = {{"eq", "="}, {"gt", ">"}, {"lt", "<"}, {"ge", ">="}, {"le", "<="}, {"nt", "!="}};
-    if (opMap.find(op) == opMap.end()) {
+    if (opMap.find(op) == opMap.end())
+    {
         cout << RED << "Error: Invalid operator" << RESET << endl;
         return false;
     }
@@ -948,152 +1614,192 @@ bool table::indexedSearch(string databaseName, string columnName, string value) 
     vector<pair<int, int>> results; // Store {fileNumber, lineNumber}
 
     // Perform indexed search
-    if (type == "string") {
-        if (op == "=") {
+    if (type == "string")
+    {
+        if (op == "=")
+        {
             auto it = indexString.find(value);
-            if (it != indexString.end()) {
+            if (it != indexString.end())
+            {
                 results.push_back(it->second);
             }
-        } else {
+        }
+        else
+        {
             for (auto it = (op == ">" || op == ">=") ? indexString.lower_bound(value) : indexString.begin();
                  it != indexString.end() && (op == "<" || op == "<=" || it->first >= value);
-                 ++it) {
+                 ++it)
+            {
                 if ((op == "<" && it->first >= value) || (op == ">" && it->first <= value))
                     break;
                 results.push_back(it->second);
             }
         }
-    } 
-    else if (type == "int") {
+    }
+    else if (type == "int")
+    {
         int intValue = stoi(value);
-        if (op == "=") {
+        if (op == "=")
+        {
             auto it = indexInt.find(intValue);
-            if (it != indexInt.end()) results.push_back(it->second);
-        } 
-        else if (op == ">=") {
+            if (it != indexInt.end())
+                results.push_back(it->second);
+        }
+        else if (op == ">=")
+        {
             for (auto it = indexInt.lower_bound(intValue); it != indexInt.end(); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == ">") {
+        }
+        else if (op == ">")
+        {
             for (auto it = indexInt.upper_bound(intValue); it != indexInt.end(); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == "<=") {
+        }
+        else if (op == "<=")
+        {
             for (auto it = indexInt.begin(); it != indexInt.upper_bound(intValue); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == "<") {
+        }
+        else if (op == "<")
+        {
             for (auto it = indexInt.begin(); it != indexInt.lower_bound(intValue); ++it)
                 results.push_back(it->second);
         }
     }
-    else if (type == "double") {
+    else if (type == "double")
+    {
         double doubleValue = stod(value);
-        if (op == "=") {
+        if (op == "=")
+        {
             auto it = indexDouble.find(doubleValue);
-            if (it != indexDouble.end()) results.push_back(it->second);
-        } 
-        else if (op == ">=") {
+            if (it != indexDouble.end())
+                results.push_back(it->second);
+        }
+        else if (op == ">=")
+        {
             for (auto it = indexDouble.lower_bound(doubleValue); it != indexDouble.end(); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == ">") {
+        }
+        else if (op == ">")
+        {
             for (auto it = indexDouble.upper_bound(doubleValue); it != indexDouble.end(); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == "<=") {
+        }
+        else if (op == "<=")
+        {
             for (auto it = indexDouble.begin(); it != indexDouble.upper_bound(doubleValue); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == "<") {
+        }
+        else if (op == "<")
+        {
             for (auto it = indexDouble.begin(); it != indexDouble.lower_bound(doubleValue); ++it)
                 results.push_back(it->second);
         }
-    } 
-    else if (type == "char") {
+    }
+    else if (type == "char")
+    {
         char charValue = value[0];
-        if (op == "=") {
+        if (op == "=")
+        {
             auto it = indexChar.find(charValue);
-            if (it != indexChar.end()) results.push_back(it->second);
-        } 
-        else if (op == ">=") {
+            if (it != indexChar.end())
+                results.push_back(it->second);
+        }
+        else if (op == ">=")
+        {
             for (auto it = indexChar.lower_bound(charValue); it != indexChar.end(); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == ">") {
+        }
+        else if (op == ">")
+        {
             for (auto it = indexChar.upper_bound(charValue); it != indexChar.end(); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == "<=") {
+        }
+        else if (op == "<=")
+        {
             for (auto it = indexChar.begin(); it != indexChar.upper_bound(charValue); ++it)
                 results.push_back(it->second);
-        } 
-        else if (op == "<") {
+        }
+        else if (op == "<")
+        {
             for (auto it = indexChar.begin(); it != indexChar.lower_bound(charValue); ++it)
                 results.push_back(it->second);
         }
-    } 
-    else {
+    }
+    else
+    {
         cout << RED << "Error: Invalid column type" << RESET << endl;
         return false;
     }
 
     // If no results, print error
-    if (results.empty()) {
+    if (results.empty())
+    {
         cout << RED << "Error: Value not found" << RESET << endl;
         return false;
     }
 
     // Read and print records from .bin files
-    for (const auto& [fileNumber, lineNumber] : results) {
-        string fileName ="databases/"+ databaseName +'/' + tableName+'/'+tableName + to_string(fileNumber) + ".bin";
+    for (const auto &[fileNumber, lineNumber] : results)
+    {
+        string fileName = "databases/" + databaseName + '/' + tableName + '/' + tableName + to_string(fileNumber) + ".bin";
         ifstream file(fileName, ios::binary);
-        if (!file) {
+        if (!file)
+        {
             cout << RED << "Error: Unable to open file " << fileName << RESET << endl;
             continue;
         }
 
         // Seek to the correct line in the file
-        int pos = (lineNumber-1) * getTotalBytes(data);
-        if(pos<0)
+        int pos = (lineNumber - 1) * getTotalBytes(data);
+        if (pos < 0)
             pos++;
         file.seekg(pos, ios::beg); // Adjust `recordSize` to your actual structure
 
         // Read the record
         vector<string> record;
-        for (const auto& col : data) {
-            const string& colType = col.second.first;
+        for (const auto &col : data)
+        {
+            const string &colType = col.second.first;
             size_t size = col.second.second;
-            if (colType == "char") {
-                if (size == 1) {
+            if (colType == "char")
+            {
+                if (size == 1)
+                {
                     char val;
-                    file.read(reinterpret_cast<char*>(&val), sizeof(char));
+                    file.read(reinterpret_cast<char *>(&val), sizeof(char));
                     record.push_back(string(1, val));
-                } else {
+                }
+                else
+                {
                     char val[size];
-                    file.read(reinterpret_cast<char*>(val), sizeof(char)*size);
+                    file.read(reinterpret_cast<char *>(val), sizeof(char) * size);
                     record.push_back(val);
                 }
-            } 
-            else if (colType == "int") {
+            }
+            else if (colType == "int")
+            {
                 int val;
-                file.read(reinterpret_cast<char*>(&val), sizeof(int));
+                file.read(reinterpret_cast<char *>(&val), sizeof(int));
                 record.push_back(to_string(val));
-            } 
-            else if (colType == "double") {
+            }
+            else if (colType == "double")
+            {
                 double val;
-                file.read(reinterpret_cast<char*>(&val), sizeof(double));
+                file.read(reinterpret_cast<char *>(&val), sizeof(double));
                 record.push_back(to_string(val));
-            } 
-            else if (colType == "bool") {
+            }
+            else if (colType == "bool")
+            {
                 bool val;
-                file.read(reinterpret_cast<char*>(&val), sizeof(bool));
+                file.read(reinterpret_cast<char *>(&val), sizeof(bool));
                 record.push_back(to_string(val));
             }
         }
 
         // Print the record
-        for (const string& field : record) {
+        for (const string &field : record)
+        {
             cout << field << " ";
         }
         cout << endl;
@@ -1104,28 +1810,87 @@ bool table::indexedSearch(string databaseName, string columnName, string value) 
     return true;
 }
 
-
-int table::getTotalBytes(const vector<pair<string, pair<string, int>>>& data) {
+int table::getTotalBytes(const vector<pair<string, pair<string, int>>> &data){
     int totalBytes = 0;
 
-    for (const auto& entry : data) {
+    for (const auto &entry : data)
+    {
         string dataType = entry.second.first;
         int count = entry.second.second; // Number of elements
 
-        if (dataType == "int") {
+        if (dataType == "int")
+        {
             totalBytes += 4 * count;
-        } else if (dataType == "char") {
+        }
+        else if (dataType == "char")
+        {
             totalBytes += 1 * count;
-        } else if (dataType == "double") {
+        }
+        else if (dataType == "double")
+        {
             totalBytes += 8 * count;
-        } else if (dataType == "bool") {
+        }
+        else if (dataType == "bool")
+        {
             totalBytes += 1 * count; // Typically, bool takes 1 byte
-        } else {
+        }
+        else
+        {
             cout << "Unknown data type: " << dataType << endl;
         }
     }
 
     return totalBytes;
 }
+
+bool table::evaluateExpr(const string &expr, const vector<bool> &between)
+{
+    stack<bool> valueStack;
+    int index = 0;
+
+    for (size_t i = 0; i < expr.size(); ++i)
+    {
+        char ch = expr[i];
+
+        if (ch == '{')
+        {
+            if (i + 2 < expr.size() && expr[i + 2] == '}')
+            {
+                char op = expr[i + 1];
+
+                // Make sure we have at least 2 values to apply op on
+                if (index + 1 >= between.size())
+                {
+                    cerr << "Error: Not enough operands in 'between' for operator " << op << "\n";
+                    return false;
+                }
+
+                bool a = between[index++];
+                bool b = between[index++];
+
+                bool result = (op == '&') ? (a & b) : (op == '|') ? (a | b)
+                                                                  : false;
+
+                valueStack.push(result);
+
+                i += 2; // skip over operator and closing brace
+            }
+            else
+            {
+                cerr << "Error: Invalid expression format near position " << i << "\n";
+                return false;
+            }
+        }
+    }
+
+    if (!valueStack.empty())
+    {
+        return valueStack.top();
+    }
+
+    cerr << "Error: No result on value stack\n";
+    return false;
+}
+
 
 

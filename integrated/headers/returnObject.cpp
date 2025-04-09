@@ -62,3 +62,9 @@ returnObject::returnObject(string one, string two, string tableName,
 }
 
 
+returnObject::returnObject(string one,string two,string findInputs){
+    this->one=one;
+    this->two=two;
+    this->findInputs=findInputs;
+    this->flag=5;
+}

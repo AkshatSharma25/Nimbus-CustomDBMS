@@ -13,6 +13,9 @@
         "ranges": "cpp",
         "iosfwd": "cpp",
         "future": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp",
+        "iostream": "cpp"
     }
 }

@@ -21,8 +21,8 @@ thread.start()
 
 # Send initialization commands
 init_commands = [
-    "createDatabase.test5",
-    "useDatabase.test5",
+    "createDatabase.test6",
+    "useDatabase.test6",
     "db.createTable.(name:mytable,stName:char[50],age:int,gender:char)"
 ]
 

@@ -48,8 +48,9 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
             const string error = "Syntax Error: invalid middle keyword";
             throw error;
         }
-        else if (two == "insert" )
+        else if (two == "insert")
         {
+            cout<<'x'<<endl;
             three=three.substr(1,three.size()-2);
             vector<string> inputs2;
             string temp = "";
@@ -130,6 +131,10 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
             returnObject p(one, two, tableName, whereClauses, setClauses);
             return p;
         }
+        else if(two=="find" || two=="delete"){
+            returnObject p(one, two, three);
+            return p;
+        }
         else
         {
             bool isAndQuery = false;
@@ -190,6 +195,7 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
             returnObject p(one, two, inputs);
             return p;
         }
+    
     }
     catch (string &e)
     {

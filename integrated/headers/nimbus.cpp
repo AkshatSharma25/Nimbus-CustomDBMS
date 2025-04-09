@@ -79,6 +79,9 @@ void nimbus::start()
         else if(p.flag==3){
             EXECUTER.executeUpdate(p.one, p.two, dbs, selectedDatabase, p.tableName, p.whereClauses, p.setClauses);
         }
+        else if(p.flag==5){
+            EXECUTER.executeFindDelete(p.one, p.two, p.findInputs, dbs, selectedDatabase);
+        }
         else
         {
             EXECUTER.executeDouble(p.one, p.two, p.inputs, dbs, selectedDatabase);
