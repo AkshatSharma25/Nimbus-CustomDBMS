@@ -61,6 +61,11 @@ returnObject::returnObject(string one, string two, string tableName,
     this->flag = 3;  // New flag for update queries
 }
 
+returnObject::returnObject(string one){
+    this->one=one;
+    this->flag=6;
+}
+
 
 returnObject::returnObject(string one,string two,string findInputs){
     this->one=one;

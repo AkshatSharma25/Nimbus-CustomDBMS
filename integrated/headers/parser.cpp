@@ -10,6 +10,9 @@ returnObject parser::checkSyntax(const string &one, const string &two)
 {
     try
     {
+        if(two=="" && (one=="showDatabases" || one=="showTables")){
+            return returnObject(one);
+        }
         if (startKeywords.find(one) == startKeywords.end())
         {
             const string error = "Syntax Error: invalid start keyword";
@@ -33,11 +36,15 @@ returnObject parser::checkSyntax(const string &one, const string &two)
     }
 }
 
-
 returnObject parser::checkSyntax(const string &one, const string &two, string three)
 {
     try
     {
+        bool isBracketValid=isBracketStructureValid(three);
+        if(!isBracketValid){
+            const string error = "Syntax Error: invalid bracket structure";
+            throw error;
+        }
         if (startKeywords.find(one) == startKeywords.end())
         {
             const string error = "Syntax Error: invalid start keyword";
@@ -80,57 +87,8 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
             return p;
         }
         // mine
-        else if (two == "update") {
-            // Extract parameters from three
-            size_t namePos = three.find("name:");
-            size_t setPos = three.find("set:(");
-            
-            if (namePos == string::npos || setPos == string::npos) {
-                throw string("Syntax Error: missing required fields in update query");
-            }
-
-            // Extract table name
-            size_t nameEnd = three.find(',', namePos);
-            string tableName = three.substr(namePos + 5, nameEnd - (namePos + 5));
-
-            // Extract where condition (before set)
-            string whereCondition = three.substr(nameEnd + 1, setPos - (nameEnd + 2));
-
-            // Extract set values
-            string setValues = three.substr(setPos + 5, three.size() - (setPos + 6));
-
-            // Parse WHERE conditions (e.g., "stName:eq~RXDnmEsUJm")
-            vector<pair<string, string>> whereClauses;
-            size_t colonPos = whereCondition.find(':');
-            size_t tildePos = whereCondition.find('~');
-
-            if (colonPos != string::npos && tildePos != string::npos) {
-                string column = whereCondition.substr(0, colonPos);
-                string condition = whereCondition.substr(colonPos + 1, tildePos - colonPos - 1);
-                string value = whereCondition.substr(tildePos + 1);
-                whereClauses.push_back({column + ":" + condition, value});
-            } else {
-                throw string("Syntax Error: invalid WHERE clause");
-            }
-
-            // Parse SET values (e.g., "stName=akdjsl,gender=f")
-            vector<pair<string, string>> setClauses;
-            stringstream ss(setValues);
-            string setPair;
-            while (getline(ss, setPair, ',')) {
-                size_t eqPos = setPair.find('=');
-                if (eqPos == string::npos) {
-                    throw string("Syntax Error: invalid SET clause");
-                }
-                string column = setPair.substr(0, eqPos);
-                string value = setPair.substr(eqPos + 1);
-                setClauses.push_back({column, value});
-            }
-
-            returnObject p(one, two, tableName, whereClauses, setClauses);
-            return p;
-        }
-        else if(two=="find" || two=="delete"){
+        
+        else if(two=="find" || two=="delete"||two=="update"){
             returnObject p(one, two, three);
             return p;
         }
@@ -201,10 +159,15 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
         cerr << RED << e << RESET << endl;
         return returnObject();
     }
+    catch(const exception&e){
+        cerr << RED << e.what() << RESET << endl;
+        return returnObject();
+    }
+    catch(...){
+        cerr << RED << "Unknown error occurred" << RESET << endl;
+        return returnObject();
+    }
 }
-
-
-
 
 parser::parser()
 {
@@ -223,6 +186,8 @@ parser::parser()
     startKeywords.insert("createDatabase");
     startKeywords.insert("dropDatabase");
     startKeywords.insert("db");
+    startKeywords.insert("showDatabases");
+    startKeywords.insert("showTables");
 }
 
 returnObject parser::parse(string userQuery)
@@ -236,7 +201,10 @@ returnObject parser::parse(string userQuery)
         query = userQuery;
         string temp = "";
         int ctr = 0;
-        string first, second, third = "";
+        if(userQuery=="showDatabases" || userQuery=="showTables"){
+            return checkSyntax(userQuery,"");
+        }
+        string first="", second="", third = "";
         for (int i = 0; i < query.length(); i++)
         {
             if(query[i]=='.' && i>0 && query[i-1]>='0' && query[i-1]<='9'){
@@ -273,6 +241,7 @@ returnObject parser::parse(string userQuery)
             second = temp;
         else if (temp != "" && ctr == 2)
             third = temp;
+        
         if (third == "")
             return checkSyntax(first, second);
         else
@@ -293,3 +262,83 @@ void parser::printQuery()
     }
     cout << endl;
 }
+
+
+bool parser:: isBracketStructureValid(const std::string& input) {
+    std::stack<char> stk;
+    bool inside = false;
+    bool outerOpened = false;
+    bool outerClosed = false;
+
+    for (size_t i = 0; i < input.size(); ++i) {
+        char ch = input[i];
+
+        // 1. Disallow [ or ]
+        if (ch == '[' || ch == ']') {
+            throw std::runtime_error("Invalid character '[' or ']' at position " + std::to_string(i));
+        }
+
+        // 2. Opening brackets
+        if (ch == '(' || ch == '{') {
+            if (stk.empty()) {
+                // New outermost bracket
+                if (outerOpened) {
+                    throw std::runtime_error("Multiple outermost '()' pairs detected at position " + std::to_string(i));
+                }
+                if (ch != '(') {
+                    throw std::runtime_error("Outermost bracket must be '(' at position " + std::to_string(i));
+                }
+                outerOpened = true;
+                inside = true;
+            } else if (ch == '(') {
+                // Nested parentheses not allowed
+                throw std::runtime_error("Nested '()' not allowed at position " + std::to_string(i));
+            }
+            stk.push(ch);
+        }
+
+        // 3. Closing brackets
+        else if (ch == ')' || ch == '}') {
+            if (stk.empty()) {
+                throw std::runtime_error("Unmatched closing bracket at position " + std::to_string(i));
+            }
+
+            char top = stk.top();
+            if ((ch == ')' && top != '(') || (ch == '}' && top != '{')) {
+                throw std::runtime_error("Mismatched bracket at position " + std::to_string(i));
+            }
+
+            stk.pop();
+
+            // Outermost closed
+            if (stk.empty()) {
+                inside = false;
+                outerClosed = true;
+            }
+        }
+
+        // 4. Non-bracket characters
+        else {
+            if (!inside) {
+                throw std::runtime_error("Character outside outermost '()' at position " + std::to_string(i));
+            }
+        }
+
+        // 5. Extra content after outermost '()' is closed
+        if (outerClosed && i + 1 < input.size()) {
+            throw std::runtime_error("Extra characters after outermost '()' closed at position " + std::to_string(i + 1));
+        }
+    }
+
+    // Final checks
+    if (!stk.empty()) {
+        throw std::runtime_error("Unmatched opening bracket at end of input.");
+    }
+    if (!outerOpened || !outerClosed) {
+        throw std::runtime_error("Missing or incomplete outermost '()' pair.");
+    }
+
+    return true;
+}
+
+

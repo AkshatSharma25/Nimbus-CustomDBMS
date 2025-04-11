@@ -16,6 +16,7 @@ class returnObject{
     returnObject();
     returnObject(string one,string two);
     // mine
+    returnObject(string one);
     returnObject(string,string,string);
     returnObject(string one, string two, string tableName, vector<pair<string, string>> whereClauses, 
         vector<pair<string, string>> setClauses);

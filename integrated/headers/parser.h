@@ -16,5 +16,6 @@ class parser{
     parser();
     returnObject parse(string userQuery);
     void printQuery();
+    bool isBracketStructureValid(const std::string& input);
 };
 #endif

@@ -1,21 +1,6 @@
 {
     "files.associations": {
-        "*.tcc": "cpp",
         "chrono": "cpp",
-        "deque": "cpp",
-        "list": "cpp",
-        "string": "cpp",
-        "unordered_map": "cpp",
-        "unordered_set": "cpp",
-        "vector": "cpp",
-        "format": "cpp",
-        "ostream": "cpp",
-        "ranges": "cpp",
-        "iosfwd": "cpp",
-        "future": "cpp",
-        "memory": "cpp",
-        "cmath": "cpp",
-        "complex": "cpp",
-        "iostream": "cpp"
+        "span": "cpp"
     }
 }

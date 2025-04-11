@@ -1,6 +1,7 @@
-0aa
+0stx
 1sname,char,20
-1gender,char,1
+1cpi,double,1
 1marks,int,1
-24
+1roll,int,1
+25
 3NULL

@@ -3,6 +3,7 @@
 #include <thread>
 #include <filesystem>
 using namespace std;
+namespace fs = std::filesystem;
 
 #define RED "\033[31m"
 #define RESET "\033[0m"
@@ -44,7 +45,7 @@ void database::loadDatabase(string name, string metaDataFilePath)
                     }
                 }
                 tableMetaDataFile = temp;
-                table newTable = table(databaseName,tableMetaDataFile);
+                table newTable = table(databaseName, tableMetaDataFile);
                 tables.insert({tableName, {newTable, tableMetaDataFile}});
             }
         }
@@ -138,9 +139,11 @@ void database::dropTable(string tableName)
 {
     tables[tableName].first.selfDestruct();
     tables.erase(tableName);
-    string tableMetaDataFilePath = "databases/" + databaseName + "/" + tableName + ".TMData.csv";
-    remove((tableName + ".TMData.csv").c_str());
-    fstream databaseMetaDataFile(("databases/" + databaseName + "/" + databaseName + ".MData.csv").c_str());
+    string tableMetaDataFilePath = "databases/" + databaseName + "/" + tableName + "/" + tableName + ".TMData.csv";
+    fs::remove_all("databases/" + databaseName + "/" + tableName);
+    // cout<<tableMetaDataFilePath<<endl;
+    // cout<<"databases/"+databaseName+"/"+tableName<<endl;
+    ifstream databaseMetaDataFile(("databases/" + databaseName + "/" + databaseName + ".MData.csv").c_str(), std::ios::in);
     if (!databaseMetaDataFile)
     {
         cerr << RED << "Error opening metadata file!" << RESET << endl;
@@ -149,55 +152,52 @@ void database::dropTable(string tableName)
     string line;
     vector<string> newContent;
     getline(databaseMetaDataFile, line);
-    while (!getline(databaseMetaDataFile, line))
+    newContent.push_back(line);
+    while (!databaseMetaDataFile.eof())
     {
         // getline(databaseMetaDataFile, line);
-        if (line[0] == '0')
+        getline(databaseMetaDataFile, line);
+        if(line=="") break;
+        // cout<<line<<endl;
+        string tableNameX, tableMetaDataFile;
+        string temp = "";
+        line = line.substr(1, line.size() - 1);
+        int ctr = 0;
+        int n = line.size();
+        for (int i = 0; i < n; i++)
         {
-            newContent.push_back(line);
-        }
-        else if (line != "" && line[0] != '0')
-        {
-            string tableNameX, tableMetaDataFile;
-            string temp = "";
-            line = line.substr(1, line.size() - 1);
-            int ctr = 0;
-            int n = line.size();
-            for (int i = 0; i < n; i++)
+            if (line[i] != ',')
             {
-                if (line[i] != ',')
+                temp += line[i];
+            }
+            else
+            {
+                if (ctr == 0)
                 {
-                    temp += line[i];
+                    tableNameX = temp;
                 }
                 else
                 {
-                    if (ctr == 0)
-                    {
-                        tableNameX = temp;
-                    }
-                    else
-                    {
-                        tableMetaDataFile = temp;
-                    }
-                    temp = "";
-                    ctr++;
+                    tableMetaDataFile = temp;
                 }
+                temp = "";
+                ctr++;
             }
-            if (temp.size() > 0)
-                tableMetaDataFile = temp;
-            cout << tableNameX << ' ' << tableName << endl;
-            if (tableNameX != tableName)
-            {
-                newContent.push_back("1" + line + tableNameX);
-            }
+        }
+        if (temp.size() > 0)
+            tableMetaDataFile = temp;
+        // cout << tableNameX << ' ' << tableName << endl;
+        if (tableNameX != tableName)
+        {
+            newContent.push_back("1" + line);
         }
     }
     databaseMetaDataFile.close();
 
-    fstream newDatabaseMetaDataFile(("databases/" + databaseName + "/" + databaseName + ".MData.csv").c_str(), std::ios::out);
+    ofstream newDatabaseMetaDataFile(("databases/" + databaseName + "/" + databaseName + ".MData.csv").c_str(), std::ios::out);
     for (auto i : newContent)
     {
-        cout << i << endl;
+        // cout << i << endl;
         newDatabaseMetaDataFile << i << endl;
     }
     newDatabaseMetaDataFile.close();
@@ -236,28 +236,31 @@ void database::deleteFromTable(string inputs)
         cout << RED << "Error: No values to insert" << RESET << endl;
         return;
     }
-    string temp="";
-    string name="";
-    string valueString="";
-    int sizeOfInputs=inputs.size();
-    for(int i=0;i<sizeOfInputs;i++){
-        if(inputs[i]==','){
-            temp=inputs.substr(0,i);
-            inputs=inputs.substr(i+1,sizeOfInputs-i-2);
+    string temp = "";
+    string name = "";
+    string valueString = "";
+    int sizeOfInputs = inputs.size();
+    for (int i = 0; i < sizeOfInputs; i++)
+    {
+        if (inputs[i] == ',')
+        {
+            temp = inputs.substr(0, i);
+            inputs = inputs.substr(i + 1, sizeOfInputs - i - 2);
             break;
         }
     }
 
-    for(int i=0;i<temp.size();i++){
-        if(temp[i]==':'){
-            valueString=temp.substr(i+1,temp.size()-i-1);
-            name=temp.substr(0,i-1);
+    for (int i = 0; i < temp.size(); i++)
+    {
+        if (temp[i] == ':')
+        {
+            valueString = temp.substr(i + 1, temp.size() - i - 1);
+            name = temp.substr(0, i - 1);
 
             break;
         }
     }
 
-    
     // cout<<name<<' '<<valueString<<' '<<inputs<<endl;
     // string nameString = inputs[0].first;
     if (name != "(nam")
@@ -281,19 +284,80 @@ void database::deleteFromTable(string inputs)
     cout << GREEN << "Data searched successfully!" << RESET << endl;
 }
 
-void database::updateTable(const string tableName, const string columnName, const string newValue, const string condition)
+void database::updateTable(string inputs)
 {
     try
     {
-        if (tables.find(tableName) == tables.end())
+        if (inputs.size() == 0)
         {
-            throw string("Error: Table '" + tableName + "' does not exist in database '" + databaseName + "'");
+            cout << RED << "Error: No values to insert" << RESET << endl;
+            return;
+        }
+        string temp = "";
+        string name = "";
+        string valueString = "";
+        int sizeOfInputs = inputs.size();
+        for (int i = 0; i < sizeOfInputs; i++)
+        {
+            if (inputs[i] == ',')
+            {
+                temp = inputs.substr(0, i);
+                inputs = inputs.substr(i + 1, sizeOfInputs - i - 2);
+                break;
+            }
         }
 
-        // Call the update function in the corresponding table
-        tables[tableName].first.update(databaseName, columnName, newValue, condition);
+        for (int i = 0; i < temp.size(); i++)
+        {
+            if (temp[i] == ':')
+            {
+                valueString = temp.substr(i + 1, temp.size() - i - 1);
+                name = temp.substr(0, i - 1);
 
-        cout << GREEN << "Update successful in table '" << tableName << "'\n" << RESET;
+                break;
+            }
+        }
+
+        // cout<<name<<' '<<valueString<<' '<<inputs<<endl;
+        // string nameString = inputs[0].first;
+        if (name != "(nam")
+        {
+            cout << RED << "Error: Invalid column name" << RESET << endl;
+            return;
+        }
+        // string valueString = inputs[0].second;
+        if (valueString == "")
+        {
+            cout << RED << "Error: Invalid name value" << RESET << endl;
+            return;
+        }
+
+        if (tables.find(valueString) == tables.end())
+        {
+            cout << RED << "Error: Table does not exist" << RESET << endl;
+            return;
+        }
+
+        // if (inputs.size() == 0)
+        // {
+        //     tables[valueString].first.search(databaseName);
+        //     cout << GREEN << "Data searched successfully!" << RESET << endl;
+        //     return;
+        // }
+        // if(inputs.size()==1){
+        //     if(inputs[0].first==tables[valueString].first.indexedColumn){
+        //         cout<<inputs[0].first<<' '<<inputs[0].second<<endl;
+        //         tables[valueString].first.indexedSearch(databaseName, inputs[0].first,inputs[0].second);
+        //         cout << GREEN << "Data searched successfully!" << RESET << endl;
+        //         return;
+        //     }
+        // }
+
+        // Call the update function in the corresponding table
+        tables[valueString].first.parallelUpdate(databaseName, inputs);
+
+        cout << GREEN << "Update successful in table '" << valueString << "'\n"
+             << RESET;
     }
     catch (string &error)
     {
@@ -332,12 +396,13 @@ void database::createIndex(vector<pair<string, string>> inputs)
         cout << "RED" << "invalid query: no column name provided" << RESET << endl;
         return;
     }
-    if(inputs[0].first=="col"){
-        tables[valueString].first.createIndex(databaseName, inputs[0].second,0);
+    if (inputs[0].first == "col")
+    {
+        tables[valueString].first.createIndex(databaseName, inputs[0].second, 0);
         cout << GREEN << "Index created successfully!" << RESET << endl;
         return;
     }
-    cout<<"RED"<<"invalid query: no column name provided"<<RESET<<endl;
+    cout << "RED" << "invalid query: no column name provided" << RESET << endl;
     return;
 }
 
@@ -348,28 +413,31 @@ void database::searchInTable(string inputs)
         cout << RED << "Error: No values to insert" << RESET << endl;
         return;
     }
-    string temp="";
-    string name="";
-    string valueString="";
-    int sizeOfInputs=inputs.size();
-    for(int i=0;i<sizeOfInputs;i++){
-        if(inputs[i]==','){
-            temp=inputs.substr(0,i);
-            inputs=inputs.substr(i+1,sizeOfInputs-i-2);
+    string temp = "";
+    string name = "";
+    string valueString = "";
+    int sizeOfInputs = inputs.size();
+    for (int i = 0; i < sizeOfInputs; i++)
+    {
+        if (inputs[i] == ',')
+        {
+            temp = inputs.substr(0, i);
+            inputs = inputs.substr(i + 1, sizeOfInputs - i - 2);
             break;
         }
     }
 
-    for(int i=0;i<temp.size();i++){
-        if(temp[i]==':'){
-            valueString=temp.substr(i+1,temp.size()-i-1);
-            name=temp.substr(0,i-1);
+    for (int i = 0; i < temp.size(); i++)
+    {
+        if (temp[i] == ':')
+        {
+            valueString = temp.substr(i + 1, temp.size() - i - 1);
+            name = temp.substr(0, i - 1);
 
             break;
         }
     }
 
-    
     // cout<<name<<' '<<valueString<<' '<<inputs<<endl;
     // string nameString = inputs[0].first;
     if (name != "(nam")
@@ -408,3 +476,22 @@ void database::searchInTable(string inputs)
     cout << GREEN << "Data searched successfully!" << RESET << endl;
 }
 
+void database::showTables()
+{
+    try
+    {
+        cout << "Database Name: " << databaseName << endl;
+        cout << "Tables in the database: " << endl;
+        for (auto i : tables)
+        {
+            cout << i.first << endl;
+        }
+        // cout<<endl;
+        cout << "Total number of tables: " << tables.size() << endl;
+        cout << endl;
+    }
+    catch (exception &e)
+    {
+        cout << "error at line " << __LINE__ << " " << e.what() << endl;
+    }
+}

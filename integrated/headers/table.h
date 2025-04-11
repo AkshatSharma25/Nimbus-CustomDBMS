@@ -26,10 +26,7 @@ class table{
         map<int,pair<int,int>>indexInt;
         map<double,pair<int,int>>indexDouble;
         map<char,pair<int,int>>indexChar;
-
         map<int,pair<string,string>>updateBuffer;
-
-
         bool evaluateExpr(const string& expr, const vector<bool>& between);
         int getTotalBytes(const vector<pair<string, pair<string, int>>> &data);
     public:
@@ -42,14 +39,14 @@ class table{
         void printMetaData();  
         bool insert(string databaseName,vector<string>inputs);      
         bool deleteX(string databaseName,int i,string inputs);
-        void update(string databaseName, const string &columnName, const string &newValue, const string &condition);
+        bool update(string databaseName, int i, string inputs);
         bool search(string databaseName,int i,string  mp);
         bool search(string databaseName);
         bool parallelSearch(string databaseName,string inputs);
+        bool parallelUpdate(string databaseName,string inputs);
         bool parallelDelete(string databaseName,string inputs);
         bool createIndex(string databaseName,string columnName,bool init);
         bool indexedSearch(string databaseName,string columnName,string value);
-
 };
 
 

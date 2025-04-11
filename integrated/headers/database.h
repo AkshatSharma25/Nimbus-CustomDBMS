@@ -22,9 +22,10 @@ public:
     void dropTable(string tableName);
     void insertIntoTable(vector<string> inputs);
     void deleteFromTable(string inputs);
-    void updateTable(const string tableName, const string columnName, const string newValue, const string condition);
+    void updateTable(string inputs);
     void searchInTable(string inputs);
     void createIndex(vector<pair<string, string>> inputs);
+    void showTables();
 };
 
 #endif

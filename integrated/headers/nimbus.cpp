@@ -26,7 +26,7 @@ void nimbus::loadMetadata()
         getline(metaDataFile, line);
         if (line[0] == '0')
         {
-            selectedDatabase = line.substr(1, line.size() - 1);
+            // selectedDatabase = line.substr(1, line.size() - 1);
         }
         else if (line[0] == '1')
         {
@@ -76,11 +76,19 @@ void nimbus::start()
         {
             EXECUTER.executeSingle(p.one, p.two, dbs, selectedDatabase);
         }
-        else if(p.flag==3){
-            EXECUTER.executeUpdate(p.one, p.two, dbs, selectedDatabase, p.tableName, p.whereClauses, p.setClauses);
-        }
         else if(p.flag==5){
-            EXECUTER.executeFindDelete(p.one, p.two, p.findInputs, dbs, selectedDatabase);
+            EXECUTER.executeFindDeleteUpdate(p.one, p.two, p.findInputs, dbs, selectedDatabase);
+        }
+        else if(p.flag==6){
+            if(p.one=="showDatabases"){
+                EXECUTER.showDatabases(dbs);
+            }
+            else if(p.one=="showTables"){
+                EXECUTER.showTables(dbs, selectedDatabase);
+            }
+            else{
+                cout<<"Invalid command"<<endl;
+            }
         }
         else
         {

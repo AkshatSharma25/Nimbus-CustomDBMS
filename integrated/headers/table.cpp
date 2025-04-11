@@ -6,8 +6,9 @@
 #include <future>
 #define RED "\033[31m"
 #define RESET "\033[0m"
-
 using namespace std;
+namespace fs = std::filesystem;
+
 
 map<string, string> table::interpretRead(ifstream &file, int sizeOfLine)
 {
@@ -308,7 +309,7 @@ table::table(string tableName, string databaseName, vector<pair<string, string>>
 
 void table::selfDestruct()
 {
-    cout << tableName << " is set to self destruct" << endl;
+    cout<<"Deleting table: " << tableName << endl;
 }
 
 void table::printMetaData()
@@ -334,7 +335,7 @@ bool table::insert(string databaseName, vector<string> inputs)
 {
     if (inputs.size() != data.size())
     {
-        cout << "Error: Number of columns in the table and the number of values to insert do not match" << endl;
+        cout <<RED<< "Error: Number of columns in the table and the number of values to insert do not match" <<RESET<< endl;
         return false;
     }
     for (int i = 0; i < data.size(); i++)
@@ -352,7 +353,7 @@ bool table::insert(string databaseName, vector<string> inputs)
             }
             catch (const invalid_argument &e)
             {
-                cout << "Error: Invalid value for column " << colName << endl;
+                cout << RED<<"Error: Invalid value for column " << colName << RESET<<endl;
                 return false;
             }
         }
@@ -364,7 +365,7 @@ bool table::insert(string databaseName, vector<string> inputs)
             }
             catch (const invalid_argument &e)
             {
-                cout << "Error: Invalid value for column " << colName << endl;
+                cout <<RED<< "Error: Invalid value for column " << colName<<RESET << endl;
                 return false;
             }
         }
@@ -376,7 +377,7 @@ bool table::insert(string databaseName, vector<string> inputs)
             }
             catch (const invalid_argument &e)
             {
-                cout << "Error: Invalid value for column " << colName << endl;
+                cout <<RED<< "Error: Invalid value for column " << colName <<RESET<< endl;
                 return false;
             }
         }
@@ -388,7 +389,7 @@ bool table::insert(string databaseName, vector<string> inputs)
             }
             catch (const invalid_argument &e)
             {
-                cout << "Error: Invalid value for column " << colName << endl;
+                cout <<RED<< "Error: Invalid value for column " << colName<<RESET << endl;
                 return false;
             }
         }
@@ -412,7 +413,7 @@ bool table::insert(string databaseName, vector<string> inputs)
     return true;
 }
 
-bool table::deleteX(string databaseName, int i,string mp)
+bool table::deleteX(string databaseName, int i, string mp)
 {
     try
     {
@@ -426,13 +427,11 @@ bool table::deleteX(string databaseName, int i,string mp)
             }
             try
             {
-                vector<map<string,string>> answer;
-                
+                vector<map<string, string>> answer;
+
                 map<string, pair<string, int>> cols;
-                for(auto i:cols){
-                    cout<<i.first<<' ';
-                }
-                cout<<endl;
+
+                // cout<<endl;
                 for (int i = 0; i < data.size(); i++)
                 {
                     string temp = "char";
@@ -441,8 +440,9 @@ bool table::deleteX(string databaseName, int i,string mp)
                         temp = "string";
                         cols.insert({data[i].first, {temp, i}});
                     }
-                    else{
-                        temp=data[i].second.first;
+                    else
+                    {
+                        temp = data[i].second.first;
                         cols.insert({data[i].first, {temp, i}});
                     }
                 }
@@ -484,9 +484,9 @@ bool table::deleteX(string databaseName, int i,string mp)
                         i++;
                         check = false;
                     }
-                    else if (mp[i] == '>' && mp[i + 1] == '=')
+                    else if (mp[i] == '!' && mp[i + 1] == '=')
                     {
-                        condition = ">=";
+                        condition = "!=";
                         i++;
                         check = false;
                     }
@@ -532,15 +532,15 @@ bool table::deleteX(string databaseName, int i,string mp)
                 }
 
                 int sizeOfLine = getTotalBytes(this->data);
-                int rowNumber=0;
+                int rowNumber = 0;
                 // set<int>rowsToDelete;
-                while (!tableDataFile.eof())
+                while (true)
                 {
                     rowNumber++;
 
                     map<string, string> b = interpretRead(tableDataFile, sizeOfLine);
                     vector<bool> checks(cond.size());
-                    
+
                     for (int i = 0; i < cond.size(); i++)
                     {
                         // cout<<cols[cond[i].first].first<<' '<<b[cond[i].first]<<' '<<cond[i].first<<' '<<cond[i].second<<endl;
@@ -556,9 +556,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -601,9 +603,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -637,7 +641,7 @@ bool table::deleteX(string databaseName, int i,string mp)
                         }
                         else if (cols[cond[i].first].first == "char")
                         {
-                            char one = stoi(b[cond[i].first]);
+                            char one = b[cond[i].first][0];
                             char two = cond[i].second[0];
                             if (between[i] == "==")
                             {
@@ -646,9 +650,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -691,9 +697,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -736,9 +744,11 @@ bool table::deleteX(string databaseName, int i,string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -776,9 +786,13 @@ bool table::deleteX(string databaseName, int i,string mp)
                         if (checks[0] == true)
                         {
                             continue;
+                            cout<<'$'<<endl;
+                            for(auto i:b){
+                                cout<<i.first<<' '<<i.second<<endl;
+                            }
                         }
-                        else{
-
+                        else
+                        {
                             answer.push_back(b);
                         }
                     }
@@ -791,10 +805,16 @@ bool table::deleteX(string databaseName, int i,string mp)
                             answer.push_back(b);
                         }
                     }
+                    if (tableDataFile.eof()) break;
                 }
-
-
-                try{
+                // for(auto i:answer){
+                //     for(auto j:i){
+                //         cout<<j.first<<' '<<j.second<<endl;
+                //     }
+                //     cout<<endl;
+                // }
+                try
+                {
                     string tableDataFilePath = "databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin";
                     ofstream tableDataFile(tableDataFilePath, ios::out | ios::binary);
                     if (!tableDataFile)
@@ -802,17 +822,23 @@ bool table::deleteX(string databaseName, int i,string mp)
                         cout << RED << "Error: Failed to open table data file" << RESET << endl;
                         return false;
                     }
+                    int k=answer.size();
+                    k--;
                     for (auto i : answer)
                     {
-                        vector<string>toWrite;
-                        for(auto k:data){
+                        if(k==0) break;
+                        k--;
+                        vector<string> toWrite;
+                        for (auto k : data)
+                        {
                             toWrite.push_back(i[k.first]);
                         }
                         interpretWrite(tableDataFile, toWrite);
                     }
                     tableDataFile.close();
                 }
-                catch(const exception &e){
+                catch (const exception &e)
+                {
                     cerr << RED << "Error processing data at line " << __LINE__ << ": " << e.what() << RESET << endl;
                 }
             }
@@ -836,11 +862,6 @@ bool table::deleteX(string databaseName, int i,string mp)
         cerr << RED << "Fatal error in search function at line " << __LINE__ << ": " << e.what() << RESET << endl;
         return false;
     }
-}
-
-void table::update(string databaseName, const string &columnName, const string &newValue, const string &condition)
-{
-
 }
 
 bool table::updateRowNumber(string databaseName)
@@ -889,105 +910,24 @@ bool table::updateRowNumber(string databaseName)
     return true;
 }
 
-bool table::parallelSearch(string databaseName, string inputs)
-{
-    try
-    {
-        int numberOfFiles = numberOfRecords / 1000 + 1;
-
-        std::vector<std::future<bool>> futures;
-
-        // Limit threads dynamically
-        int maxThreads = 2;
-        if (maxThreads < 2)
-            maxThreads = 2;
-
-        for (int i = 1; i <= numberOfFiles; i++)
-        {
-            if (futures.size() >= maxThreads)
-            {
-                // Wait for some threads to finish before launching more
-                for (auto &f : futures)
-                    f.get();
-                futures.clear();
-            }
-
-            // Launch thread asynchronously
-            futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
-                                         { return this->search(databaseName, i, inputs); }));
-            // search(databaseName, inputs, i, mp);
-        }
-
-        // Wait for remaining threads
-        for (auto &f : futures)
-            f.get();
-
-        return true;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error in parallelSearch: " << e.what() << std::endl;
-        return false;
-    }
-}
-
-bool table::parallelDelete(string databaseName, string inputs){
-    try
-    {
-        int numberOfFiles = numberOfRecords / 1000 + 1;
-
-        std::vector<std::future<bool>> futures;
-
-        // Limit threads dynamically
-        int maxThreads = 2;
-        if (maxThreads < 2)
-            maxThreads = 2;
-
-        for (int i = 1; i <= numberOfFiles; i++)
-        {
-            if (futures.size() >= maxThreads)
-            {
-                // Wait for some threads to finish before launching more
-                for (auto &f : futures)
-                    f.get();
-                futures.clear();
-            }
-
-            // Launch thread asynchronously
-            futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
-                                         { return this->deleteX(databaseName, i, inputs); }));
-            // search(databaseName, inputs, i, mp);
-        }
-
-        // Wait for remaining threads
-        for (auto &f : futures)
-            f.get();
-
-        return true;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Error in parallelSearch: " << e.what() << std::endl;
-        return false;
-    }
-}
-
-bool table::search(string databaseName, int i, string mp)
+bool table::update(string databaseName, int j, string mp)
 {
     try
     {
         try
         {
-            ifstream tableDataFile("databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin", ios::in | ios::binary);
+            ifstream tableDataFile("databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(j) + ".bin", ios::in | ios::binary);
 
             if (!tableDataFile)
             {
-                throw runtime_error("Failed to open table data file: " + tableName + to_string(i) + ".bin");
+                throw runtime_error("Failed to open table data file: " + tableName + to_string(j) + ".bin");
             }
             try
             {
-                vector<vector<string>> answer;
+                vector<map<string, string>> answer;
                 map<string, pair<string, int>> cols;
+                vector<map<string, string>> updateData;
+                map<string, string> toUpdate;
                 for (int i = 0; i < data.size(); i++)
                 {
                     string temp = "char";
@@ -996,8 +936,9 @@ bool table::search(string databaseName, int i, string mp)
                         temp = "string";
                         cols.insert({data[i].first, {temp, i}});
                     }
-                    else{
-                        temp=data[i].second.first;
+                    else
+                    {
+                        temp = data[i].second.first;
                         cols.insert({data[i].first, {temp, i}});
                     }
                 }
@@ -1009,8 +950,13 @@ bool table::search(string databaseName, int i, string mp)
                 string condition = "";
                 bool check = true;
                 string expression = "";
-                for (int i = 0; i < mp.size(); i++)
+                int i = 0;
+                for (; i < mp.size(); i++)
                 {
+                    if (mp[i] == '$')
+                    {
+                        break;
+                    }
                     if (mp[i] == '&' || mp[i] == '|')
                     {
                         cond.push_back({temp, value});
@@ -1090,19 +1036,57 @@ bool table::search(string databaseName, int i, string mp)
                 //     cout<<i.first<<' '<<i.second<<endl;
                 // }
                 // cout<<endl;
-                for(auto i:cols){
-                    cout<<i.first<<' ';
+                i += 3;
+
+                string temp2 = "";
+                string value2 = "";
+                bool t = 1;
+                for (; i < mp.size(); i++)
+                {
+                    if (mp[i] == '}')
+                        break;
+                    if (mp[i] == ',')
+                    {
+                        toUpdate.insert({temp2, value2});
+                        temp2 = "";
+                        value2 = "";
+                        t = 1;
+                    }
+                    else if (mp[i] == ':')
+                    {
+                        t = 0;
+                    }
+                    else if (t)
+                    {
+                        temp2 += mp[i];
+                    }
+                    else
+                    {
+                        value2 += mp[i];
+                    }
                 }
-                cout<<endl;
+                if (temp2.size() > 0 && value2.size() > 0)
+                {
+                    toUpdate.insert({temp2, value2});
+                }
+
+                // cout<<'$'<<endl;
+                // for(auto i:toUpdate){
+                //     cout<<i.first<<' '<<i.second<<endl;
+                // }
+                // for(auto i:cols){
+                //     cout<<i.first<<' ';
+                // }
+                // cout<<endl;
+
                 int sizeOfLine = getTotalBytes(this->data);
-                int rowNumber=0;
+                int rowNumber = 0;
                 while (!tableDataFile.eof())
                 {
                     rowNumber++;
-
                     map<string, string> b = interpretRead(tableDataFile, sizeOfLine);
                     vector<bool> checks(cond.size());
-                    
+
                     for (int i = 0; i < cond.size(); i++)
                     {
                         // cout<<cols[cond[i].first].first<<' '<<b[cond[i].first]<<' '<<cond[i].first<<' '<<cond[i].second<<endl;
@@ -1118,9 +1102,11 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1163,9 +1149,11 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1209,9 +1197,11 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1254,9 +1244,11 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1299,9 +1291,605 @@ bool table::search(string databaseName, int i, string mp)
                                     checks[i] = true;
                                 }
                             }
-                            else if(between[i]=="!="){
-                                if(one!=two){
-                                    checks[i]=true;
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                    }
+                    if (checks.size() == 1)
+                    {
+                        if (checks[0] == true)
+                        {
+                            updateData.push_back(b);
+                            continue;
+                        }
+                        else
+                        {
+                            answer.push_back(b);
+                        }
+                    }
+                    else
+                    {
+
+                        bool check = evaluateExpr(expression, checks);
+                        if (check)
+                        {
+                            updateData.push_back(b);
+                        }
+                        else
+                        {
+
+                            answer.push_back(b);
+                        }
+                    }
+                }
+                try
+                {
+                    string tableDataFilePath = "databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(j) + ".bin";
+                    ofstream tableDataFile(tableDataFilePath, ios::out | ios::binary);
+                    if (!tableDataFile)
+                    {
+                        cout << RED << "Error: Failed to open table data file" << RESET << endl;
+                        return false;
+                    }
+                    for (auto i : answer)
+                    {
+                        vector<string> toWrite;
+                        for (auto k : data)
+                        {
+                            toWrite.push_back(i[k.first]);
+                        }
+                        interpretWrite(tableDataFile, toWrite);
+                    }
+
+                    // for(auto i:toUpdate){
+                    //     cout<<i.first<<' '<<i.second<<endl;
+                    // }
+                    for (auto &i : updateData)
+                    {
+                        // map<string,string>temp=i;
+                        for (auto k : toUpdate)
+                        {
+                            i[k.first] = k.second;
+                        }
+                        // for(auto k:i){
+                        //     cout<<k.first<<' '<<k.second<<endl;
+                        // }
+                        vector<string> toWrite;
+                        for (auto k : data)
+                        {
+                            toWrite.push_back(i[k.first]);
+                        }
+                        interpretWrite(tableDataFile, toWrite);
+                    }
+                }
+                catch (const exception &e)
+                {
+                    cerr << RED << "Error processing data at line " << __LINE__ << ": " << e.what() << RESET << endl;
+                }
+            }
+            catch (const exception &e)
+            {
+                cerr << RED << "Error processing data at line " << __LINE__ << ": " << e.what() << RESET << endl;
+            }
+
+            tableDataFile.close();
+        }
+        catch (const exception &e)
+        {
+            cerr << RED << "Error processing file at line " << __LINE__ << ": " << e.what() << RESET << endl;
+            return false;
+        }
+
+        return true;
+    }
+    catch (const exception &e)
+    {
+        cerr << RED << "Fatal error in search function at line " << __LINE__ << ": " << e.what() << RESET << endl;
+        return false;
+    }
+}
+
+bool table::parallelUpdate(string databaseName, string inputs)
+{
+    try
+    {
+        int numberOfFiles = numberOfRecords / 1000 + 1;
+
+        std::vector<std::future<bool>> futures;
+
+        // Limit threads dynamically
+        int maxThreads = 2;
+        if (maxThreads < 2)
+            maxThreads = 2;
+
+        for (int i = 1; i <= numberOfFiles; i++)
+        {
+            if (futures.size() >= maxThreads)
+            {
+                // Wait for some threads to finish before launching more
+                for (auto &f : futures)
+                    f.get();
+                futures.clear();
+            }
+
+            // Launch thread asynchronously
+            futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
+                                         { return this->update(databaseName, i, inputs); }));
+            // search(databaseName, inputs, i, mp);
+        }
+
+        // Wait for remaining threads
+        for (auto &f : futures)
+            f.get();
+
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error in parallelSearch: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool table::parallelSearch(string databaseName, string inputs)
+{
+    try
+    {
+        if (inputs == "{}")
+        {
+            this - search(databaseName);
+            return true;
+        }
+        int numberOfFiles = numberOfRecords / 1000 + 1;
+
+        std::vector<std::future<bool>> futures;
+
+        // Limit threads dynamically
+        int maxThreads = 2;
+        if (maxThreads < 2)
+            maxThreads = 2;
+
+        for (int i = 1; i <= numberOfFiles; i++)
+        {
+            if (futures.size() >= maxThreads)
+            {
+                // Wait for some threads to finish before launching more
+                for (auto &f : futures)
+                    f.get();
+                futures.clear();
+            }
+
+            // Launch thread asynchronously
+            futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
+                                         { return this->search(databaseName, i, inputs); }));
+            // search(databaseName, inputs, i, mp);
+        }
+
+        // Wait for remaining threads
+        for (auto &f : futures)
+            f.get();
+
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error in parallelSearch: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool table::parallelDelete(string databaseName, string inputs)
+{
+    try
+    {
+        int numberOfFiles = numberOfRecords / 1000 + 1;
+
+        std::vector<std::future<bool>> futures;
+
+        // Limit threads dynamically
+        int maxThreads = 2;
+        if (maxThreads < 2)
+            maxThreads = 2;
+
+        for (int i = 1; i <= numberOfFiles; i++)
+        {
+            if (futures.size() >= maxThreads)
+            {
+                // Wait for some threads to finish before launching more
+                for (auto &f : futures)
+                    f.get();
+                futures.clear();
+            }
+
+            // Launch thread asynchronously
+            futures.push_back(std::async(std::launch::async, [this, databaseName, i, inputs]()
+                                         { return this->deleteX(databaseName, i, inputs); }));
+            // search(databaseName, inputs, i, mp);
+        }
+
+        // Wait for remaining threads
+        for (auto &f : futures)
+            f.get();
+
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error in parallelSearch: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool table::search(string databaseName, int i, string mp)
+{
+    try
+    {
+        try
+        {
+            ifstream tableDataFile("databases/" + databaseName + "/" + tableName + "/" + tableName + to_string(i) + ".bin", ios::in | ios::binary);
+
+            if (!tableDataFile)
+            {
+                throw runtime_error("Failed to open table data file: " + tableName + to_string(i) + ".bin");
+            }
+            try
+            {
+                vector<vector<string>> answer;
+                map<string, pair<string, int>> cols;
+                for (int i = 0; i < data.size(); i++)
+                {
+                    string temp = "char";
+                    if (data[i].second.first == "char" && data[i].second.second > 1)
+                    {
+                        temp = "string";
+                        cols.insert({data[i].first, {temp, i}});
+                    }
+                    else
+                    {
+                        temp = data[i].second.first;
+                        cols.insert({data[i].first, {temp, i}});
+                    }
+                }
+                int ctr = 0;
+                vector<pair<string, string>> cond;
+                vector<string> between;
+                string temp = "";
+                string value = "";
+                string condition = "";
+                bool check = true;
+                string expression = "";
+                for (int i = 0; i < mp.size(); i++)
+                {
+                    if (mp[i] == '&' || mp[i] == '|')
+                    {
+                        cond.push_back({temp, value});
+                        between.push_back(condition);
+                        expression += mp[i];
+                        temp = "";
+                        value = "";
+                        condition = "";
+                        check = true;
+                    }
+                    else if (mp[i] == '=' && mp[i + 1] == '=')
+                    {
+                        condition = "==";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>' && mp[i + 1] == '=')
+                    {
+                        condition = ">=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '<' && mp[i + 1] == '=')
+                    {
+                        condition = "<=";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '<')
+                    {
+                        condition = "<";
+                        i++;
+                        check = false;
+                    }
+                    else if (mp[i] == '>')
+                    {
+                        condition = ">";
+                        i++;
+                        check = false;
+                    }
+                    else if (check && mp[i] != '{' && mp[i] != '}')
+                    {
+                        temp += mp[i];
+                    }
+                    else if (mp[i] != '{' && mp[i] != '}')
+                    {
+                        value += mp[i];
+                    }
+                    else
+                    {
+                        if (mp[i] == '}')
+                        {
+                            if (temp != "" && condition != "" && value != "")
+                            {
+                                cond.push_back({temp, value});
+                                between.push_back(condition);
+                            }
+                            temp = "";
+                            value = "";
+                            condition = "";
+                            check = true;
+                            // expression+=to_string(ctr);
+                            // ctr++;
+                        }
+                        expression += mp[i];
+                        // check=true;
+                    }
+                }
+                cout << expression << endl;
+                for (auto i : cond)
+                {
+                    cout << i.first << ' ' << i.second << endl;
+                }
+                cout << endl;
+                for (auto i : cols)
+                {
+                    cout << i.first << ' ';
+                }
+                cout << endl;
+                int sizeOfLine = getTotalBytes(this->data);
+                int rowNumber = 0;
+                while (!tableDataFile.eof())
+                {
+                    rowNumber++;
+
+                    map<string, string> b = interpretRead(tableDataFile, sizeOfLine);
+                    vector<bool> checks(cond.size());
+
+                    for (int i = 0; i < cond.size(); i++)
+                    {
+                        // cout<<cols[cond[i].first].first<<' '<<b[cond[i].first]<<' '<<cond[i].first<<' '<<cond[i].second<<endl;
+                        if (cols[cond[i].first].first == "int")
+                        {
+                            int one = stoi(b[cond[i].first]);
+                            int two = stoi(cond[i].second);
+                            // cout<<'$'<<one<<' '<<two<<endl;
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "double")
+                        {
+                            double one = stod(b[cond[i].first]);
+                            double two = stod(cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "char")
+                        {
+                            char one = stoi(b[cond[i].first]);
+                            char two = cond[i].second[0];
+                            // cout<<'#'<<b[cond[i].first]<<' '<<cond[i].second<<endl;
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "string")
+                        {
+                            string one = (b[cond[i].first]);
+                            string two = (cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<=")
+                            {
+                                if (one <= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "<")
+                            {
+                                if (one < two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">=")
+                            {
+                                if (one >= two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == ">")
+                            {
+                                if (one > two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                        }
+                        else if (cols[cond[i].first].first == "bool")
+                        {
+                            int one = stoi(b[cond[i].first]);
+                            int two = stoi(cond[i].second);
+                            if (between[i] == "==")
+                            {
+                                if (one == two)
+                                {
+                                    checks[i] = true;
+                                }
+                            }
+                            else if (between[i] == "!=")
+                            {
+                                if (one != two)
+                                {
+                                    checks[i] = true;
                                 }
                             }
                             else if (between[i] == "<=")
@@ -1349,7 +1937,7 @@ bool table::search(string databaseName, int i, string mp)
                     }
                     else
                     {
-                        
+
                         bool check = evaluateExpr(expression, checks);
                         if (check)
                         {
@@ -1436,7 +2024,11 @@ bool table::search(string databaseName)
                 {
                     continue;
                 }
-
+                for (auto i : data)
+                {
+                    cout << i.first << ' ';
+                }
+                cout << endl;
                 for (size_t i = 0; i < answer.size() - 1; i++)
                 {
                     for (size_t j = 0; j < answer[i].size(); j++)
@@ -1639,7 +2231,8 @@ bool table::createIndex(string databaseName, string columnName, bool init)
     return true;
 }
 
-bool table::indexedSearch(string databaseName, string columnName, string value){
+bool table::indexedSearch(string databaseName, string columnName, string value)
+{
     string type = "";
     string op = value.substr(0, 2);
 
@@ -1864,7 +2457,8 @@ bool table::indexedSearch(string databaseName, string columnName, string value){
     return true;
 }
 
-int table::getTotalBytes(const vector<pair<string, pair<string, int>>> &data){
+int table::getTotalBytes(const vector<pair<string, pair<string, int>>> &data)
+{
     int totalBytes = 0;
 
     for (const auto &entry : data)
@@ -1945,6 +2539,3 @@ bool table::evaluateExpr(const string &expr, const vector<bool> &between)
     cerr << "Error: No result on value stack\n";
     return false;
 }
-
-
-
