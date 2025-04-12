@@ -2,6 +2,7 @@
 #include "database.h"
 #include <thread>
 #include <filesystem>
+
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -281,7 +282,7 @@ void database::deleteFromTable(string inputs)
         return;
     }
     tables[valueString].first.parallelDelete(databaseName, inputs);
-    cout << GREEN << "Data searched successfully!" << RESET << endl;
+    // cout << GREEN << "Data searched successfully!" << RESET << endl;
 }
 
 void database::updateTable(string inputs)
@@ -356,8 +357,8 @@ void database::updateTable(string inputs)
         // Call the update function in the corresponding table
         tables[valueString].first.parallelUpdate(databaseName, inputs);
 
-        cout << GREEN << "Update successful in table '" << valueString << "'\n"
-             << RESET;
+        // cout << GREEN << "Update successful in table '" << valueString << "'\n"
+            //  << RESET;
     }
     catch (string &error)
     {
@@ -473,7 +474,7 @@ void database::searchInTable(string inputs)
     //     }
     // }
     tables[valueString].first.parallelSearch(databaseName, inputs);
-    cout << GREEN << "Data searched successfully!" << RESET << endl;
+    // cout << GREEN << "Data searched successfully!" << RESET << endl;
 }
 
 void database::showTables()
@@ -488,10 +489,14 @@ void database::showTables()
         }
         // cout<<endl;
         cout << "Total number of tables: " << tables.size() << endl;
-        cout << endl;
+        // cout << endl;
     }
     catch (exception &e)
     {
         cout << "error at line " << __LINE__ << " " << e.what() << endl;
     }
 }
+
+
+
+

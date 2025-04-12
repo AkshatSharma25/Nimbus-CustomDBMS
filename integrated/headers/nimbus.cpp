@@ -59,6 +59,12 @@ nimbus::nimbus()
 
 void nimbus::start()
 {
+    if (!login())
+    {
+        cout << "Login failed. Exiting..." << endl;
+        return;
+    }
+    // cout << "Welcome to Nimbus!" << endl;
     while (true)
     {
         string input = ENVIRONMENT.takeInput();
@@ -97,5 +103,24 @@ void nimbus::start()
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<microseconds>(stop - start); 
         cout << "processed in: " << duration.count()/1000 << " milli-seconds" << endl;
+    }
+}
+
+bool nimbus::login(){
+    string username, password;
+    cout << "Enter username: ";
+    cin >> username;
+    cout << "Enter password: ";
+    cin >> password;
+
+    if (username == "admin" && password == "12345")
+    {
+        cout << "Login successful!" << endl;
+        return true;
+    }
+    else
+    {
+        cout << "Invalid credentials. Please try again." << endl;
+        return false;
     }
 }

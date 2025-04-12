@@ -13,7 +13,7 @@ class nimbus{
         executer EXECUTER;
         parser PARSER;
         void loadMetadata();
-
+        bool login();
     public:
         nimbus();
         void start();

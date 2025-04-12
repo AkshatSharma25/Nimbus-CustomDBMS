@@ -8,7 +8,7 @@ import webbrowser
 class SplashScreen:
     def __init__(self, root):
         self.root = root
-        self.root.title("DB Vision")
+        self.root.title("Nimbus")
         self.root.geometry("600x400")
         self.root.overrideredirect(True)  # Remove window decorations
         
@@ -408,3 +408,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
