@@ -27,7 +27,7 @@ environment::environment()
 string environment::takeInput()
 {
     string input;
-    cout << YELLOW << "Nimbus>>" << RESET << " ";
+    // cout << YELLOW << "Nimbus>>" << RESET << " ";
     getline(cin, input);
     if(input=="exit"){
         return "exit";

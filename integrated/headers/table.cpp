@@ -1614,6 +1614,7 @@ bool table::search(string databaseName, int i, string mp)
                 string condition = "";
                 bool check = true;
                 string expression = "";
+
                 for (int i = 0; i < mp.size(); i++)
                 {
                     if (mp[i] == '&' || mp[i] == '|')
@@ -1970,11 +1971,29 @@ bool table::search(string databaseName, int i, string mp)
                         }
                     }
                 }
+                cout<<'|';
+                for(auto i:cols){
+                    cout << i.first;
+                    int two=20-i.first.size();
+                        for(int i=0;i<two;i++)
+                        {
+                            cout << ' ';
+                        }
+                        cout<<'|';
+                }
+                cout<<endl;
                 for (auto i : answer)
                 {
+                    cout<<'|';
                     for (auto j : i)
                     {
                         cout << j << ' ';
+                        int two=20-j.size();
+                        for(int i=0;i<two;i++)
+                        {
+                            cout << ' ';
+                        }
+                        cout<<'|';
                     }
                     cout << endl;
                 }
@@ -2043,16 +2062,30 @@ bool table::search(string databaseName)
                 {
                     continue;
                 }
+                cout<<'|';
                 for (auto i : data)
                 {
-                    cout << i.first << ' ';
+                    cout << i.first;
+                    int two=20-i.first.size();
+                        for(int i=0;i<two;i++)
+                        {
+                            cout << ' ';
+                        }
+                        cout<<'|';
                 }
                 cout << endl;
                 for (size_t i = 0; i < answer.size() - 1; i++)
                 {
+                    cout<<'|';
                     for (size_t j = 0; j < answer[i].size(); j++)
                     {
-                        cout << answer[i][j] << ' ';
+                        cout << answer[i][j];
+                        int two=20-answer[i][j].size();
+                        for(int i=0;i<two;i++)
+                        {
+                            cout << ' ';
+                        }
+                        cout<<'|';
                     }
                     cout << endl;
                 }

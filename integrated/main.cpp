@@ -14,8 +14,22 @@ using namespace std;
 int main()
 {
     // std::locale::global(std::locale("C.UTF-8"));
-    nimbus NIMBUS;
-    NIMBUS.start();
+    try{
+        nimbus NIMBUS;
+        NIMBUS.start();
+    }
+    catch (const std::exception &e)
+    {
+        cerr << RED << e.what() << RESET << endl;
+    }
+    catch (string &e)
+    {
+        cerr << RED << e << RESET << endl;
+    }
+    catch (...)
+    {
+        cerr << RED << "Unknown error occurred" << RESET << endl;
+    }
 
     return 0;
 }

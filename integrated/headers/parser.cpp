@@ -34,6 +34,14 @@ returnObject parser::checkSyntax(const string &one, const string &two)
         cerr << RED << e << RESET << endl;
         return returnObject();
     }
+    catch(const exception&e){
+        cerr << RED << e.what() << RESET << endl;
+        return returnObject();
+    }
+    catch(...){
+        cerr << RED << "Unknown error occurred" << RESET << endl;
+        return returnObject();
+    }
 }
 
 returnObject parser::checkSyntax(const string &one, const string &two, string three)
@@ -274,9 +282,9 @@ bool parser:: isBracketStructureValid(const std::string& input) {
         char ch = input[i];
 
         // 1. Disallow [ or ]
-        if (ch == '[' || ch == ']') {
-            throw std::runtime_error("Invalid character '[' or ']' at position " + std::to_string(i));
-        }
+        // if (ch == '[' || ch == ']') {
+        //     throw std::runtime_error("Invalid character '[' or ']' at position " + std::to_string(i));
+        // }
 
         // 2. Opening brackets
         if (ch == '(' || ch == '{') {

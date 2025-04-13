@@ -8,10 +8,10 @@
 using namespace std;
 using namespace chrono;
 
-
 void nimbus::loadMetadata()
 {
     fstream metaDataFile("NimbusMetaData.csv");
+    
     if (!metaDataFile)
     {
         string problem = "Error loading metadata: Metadata file not found";
@@ -59,54 +59,75 @@ nimbus::nimbus()
 
 void nimbus::start()
 {
-    if (!login())
-    {
-        cout << "Login failed. Exiting..." << endl;
-        return;
-    }
+    // if (!login())
+    // {
+    //     cout << "Login failed. Exiting..." << endl;
+    //     return;
+    // }
     // cout << "Welcome to Nimbus!" << endl;
     while (true)
     {
-        string input = ENVIRONMENT.takeInput();
-        auto start = high_resolution_clock::now(); 
-        if (input == "exit")
+        try
         {
-            break;
-        }
-        returnObject p = PARSER.parse(input);
-        if (p.flag == 2)
-        {
-            EXECUTER.executeInsert(p.one, p.two, p.inputs2, dbs, selectedDatabase);
-        }
-        else if (p.flag == 0)
-        {
-            EXECUTER.executeSingle(p.one, p.two, dbs, selectedDatabase);
-        }
-        else if(p.flag==5){
-            EXECUTER.executeFindDeleteUpdate(p.one, p.two, p.findInputs, dbs, selectedDatabase);
-        }
-        else if(p.flag==6){
-            if(p.one=="showDatabases"){
-                EXECUTER.showDatabases(dbs);
+            string input = ENVIRONMENT.takeInput();
+            auto start = high_resolution_clock::now();
+            if (input == "exit")
+            {
+                break;
             }
-            else if(p.one=="showTables"){
-                EXECUTER.showTables(dbs, selectedDatabase);
+            returnObject p = PARSER.parse(input);
+            if (p.flag == 2)
+            {
+                EXECUTER.executeInsert(p.one, p.two, p.inputs2, dbs, selectedDatabase);
             }
-            else{
-                cout<<"Invalid command"<<endl;
+            else if (p.flag == 0)
+            {
+                EXECUTER.executeSingle(p.one, p.two, dbs, selectedDatabase);
             }
+            else if (p.flag == 5)
+            {
+                EXECUTER.executeFindDeleteUpdate(p.one, p.two, p.findInputs, dbs, selectedDatabase);
+            }
+            else if (p.flag == 6)
+            {
+                if (p.one == "showDatabases")
+                {
+                    EXECUTER.showDatabases(dbs);
+                }
+                else if (p.one == "showTables")
+                {
+                    EXECUTER.showTables(dbs, selectedDatabase);
+                }
+                else
+                {
+                    cout << "Invalid command" << endl;
+                }
+            }
+            else
+            {
+                EXECUTER.executeDouble(p.one, p.two, p.inputs, dbs, selectedDatabase);
+            }
+            auto stop = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(stop - start);
+            // cout << "processed in: " << duration.count() / 1000 << " milli-seconds" << endl;
         }
-        else
+        catch (const exception &e)
         {
-            EXECUTER.executeDouble(p.one, p.two, p.inputs, dbs, selectedDatabase);
+            cerr << "Error: " << e.what() << endl;
         }
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop - start); 
-        cout << "processed in: " << duration.count()/1000 << " milli-seconds" << endl;
+        catch (string &e)
+        {
+            cerr << "Error: " << e << endl;
+        }
+        catch (...)
+        {
+            cerr << "Unknown error occurred" << endl;
+        }
     }
 }
 
-bool nimbus::login(){
+bool nimbus::login()
+{
     string username, password;
     cout << "Enter username: ";
     cin >> username;
