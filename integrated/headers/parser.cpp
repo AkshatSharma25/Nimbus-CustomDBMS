@@ -48,6 +48,7 @@ returnObject parser::checkSyntax(const string &one, const string &two, string th
 {
     try
     {
+        // cout<<three<<'$'<<endl;
         bool isBracketValid=isBracketStructureValid(three);
         if(!isBracketValid){
             const string error = "Syntax Error: invalid bracket structure";
@@ -252,8 +253,10 @@ returnObject parser::parse(string userQuery)
         
         if (third == "")
             return checkSyntax(first, second);
-        else
+        else{
+            
             return checkSyntax(first, second, third);
+        }
     }
     catch (string &e)
     {
@@ -277,7 +280,7 @@ bool parser:: isBracketStructureValid(const std::string& input) {
     bool inside = false;
     bool outerOpened = false;
     bool outerClosed = false;
-
+    // cout<<input<<endl;
     for (size_t i = 0; i < input.size(); ++i) {
         char ch = input[i];
 
@@ -340,6 +343,10 @@ bool parser:: isBracketStructureValid(const std::string& input) {
 
     // Final checks
     if (!stk.empty()) {
+        while(!stk.empty()){
+            cout<<stk.top()<<endl;
+            stk.pop();
+        }
         throw std::runtime_error("Unmatched opening bracket at end of input.");
     }
     if (!outerOpened || !outerClosed) {

@@ -1,0 +1,6 @@
+0clients
+1cid,int,1
+1cname,char,40
+1contact,char,20
+21
+3NULL

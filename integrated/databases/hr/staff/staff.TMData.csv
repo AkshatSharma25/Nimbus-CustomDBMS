@@ -1,0 +1,6 @@
+0staff
+1sid,int,1
+1sname,char,25
+1role,char,20
+21
+3NULL

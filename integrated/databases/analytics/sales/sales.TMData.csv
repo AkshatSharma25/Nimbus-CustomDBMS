@@ -1,0 +1,6 @@
+0sales
+1salesId,int,1
+1amount,double,1
+1date,char,10
+21
+3NULL

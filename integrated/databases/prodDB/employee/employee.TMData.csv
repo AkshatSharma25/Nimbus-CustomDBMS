@@ -1,0 +1,6 @@
+0employee
+1eid,int,1
+1ename,char,30
+1dept,char,20
+21
+3NULL

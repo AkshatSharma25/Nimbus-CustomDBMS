@@ -1,0 +1,6 @@
+0accounts
+1accId,int,1
+1holder,char,30
+1balance,double,1
+21
+3NULL

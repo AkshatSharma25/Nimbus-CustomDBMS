@@ -1,0 +1,6 @@
+0orders
+1orderId,int,1
+1userId,int,1
+1amount,double,1
+21
+3NULL

@@ -1,0 +1,7 @@
+0prodDB
+1stx,databases/prodDB/stx/stx.TMData.csv
+1users,databases/prodDB/users/users.TMData.csv
+1products,databases/prodDB/products/products.TMData.csv
+1orders,databases/prodDB/orders/orders.TMData.csv
+1employee,databases/prodDB/employee/employee.TMData.csv
+1clients,databases/prodDB/clients/clients.TMData.csv

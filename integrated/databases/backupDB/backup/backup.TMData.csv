@@ -1,0 +1,5 @@
+0backup
+1backupId,int,1
+1timestamp,char,20
+21
+3NULL

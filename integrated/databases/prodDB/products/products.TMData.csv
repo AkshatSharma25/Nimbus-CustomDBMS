@@ -1,0 +1,6 @@
+0products
+1pid,int,1
+1pname,char,50
+1price,double,1
+21
+3NULL
